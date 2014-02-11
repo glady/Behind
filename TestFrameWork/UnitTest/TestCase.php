@@ -1,6 +1,6 @@
 <?php
 
-namespace glady\Behind\TestFrameWork\UnitTest;
+namespace glady\Behind\TestFramework\UnitTest;
 
 
 class TestCase extends \PHPUnit_Framework_TestCase

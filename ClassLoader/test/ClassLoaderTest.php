@@ -3,10 +3,10 @@
 namespace glady\Behind\ClassLoader\test;
 
 require_once __DIR__ . '/../ClassLoader.php';
-require_once __DIR__ . '/../../TestFrameWork/UnitTest/TestCase.php';
+require_once __DIR__ . '/../../TestFramework/UnitTest/TestCase.php';
 
 use glady\Behind\ClassLoader\ClassLoader;
-use glady\Behind\TestFrameWork\UnitTest\TestCase;
+use glady\Behind\TestFramework\UnitTest\TestCase;
 
 class ClassLoaderTest extends TestCase
 {
