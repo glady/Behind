@@ -3,7 +3,7 @@
 namespace glady\Behind\ClassLoader\test;
 
 require_once __DIR__ . '/../ClassLoader.php';
-require_once __DIR__ . '/../../TestFramework/UnitTest/TestCase.php';
+require_once __DIR__ . '/../../TestFrameWork/UnitTest/TestCase.php';
 
 use glady\Behind\ClassLoader\ClassLoader;
 use glady\Behind\TestFrameWork\UnitTest\TestCase;
