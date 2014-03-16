@@ -316,22 +316,4 @@ class ClassLoader
         $rules[] = $rule;
         $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
     }
-
-
-    /**
-     * @return PackageHandler
-     */
-    public function getPackageHandler()
-    {
-        return $this->packageHandler;
-    }
-
-
-    /**
-     * @param PackageHandler $packageHandler
-     */
-    public function setPackageHandler(PackageHandler $packageHandler)
-    {
-        $this->packageHandler = $packageHandler;
-    }
 }
