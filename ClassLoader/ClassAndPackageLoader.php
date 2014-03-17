@@ -126,18 +126,59 @@ class ClassAndPackageLoader extends ClassLoader
      */
     private function writeStoredPackage($id)
     {
+        $meta = "{\n \"count\": " . count($this->packages[$id]['classMap']) . ",\n \"classMap\": {";
         $package = "<?php\n";
+        $ns = 'namespace';
+        $nsLength = strlen($ns);
         foreach ($this->packages[$id]['classMap'] as $className => $fileName) {
-            $package .= "if (!class_exists('$className', false)) {\n"
-                . "//start of file: '$fileName'"; // \n";
-            // TODO: this code only works for classes with opening <?php but no closing tag
-            $package .= "?>\n";
-            // TODO: for general support, we would have to remove first/last(if exist) php-open/close tags from content below
-            $package .= file_get_contents($fileName);
-            $package .= "\n//end of file: '$fileName'\n"
-                . "}\n\n";
+            $meta .= "\n  \"$className\": \"$fileName\",";
+
+            // load file content
+            $sourceFile = file_get_contents($fileName);
+            $sourceFile = str_replace("\r", "", $sourceFile);
+            $sourceFile = explode("\n", $sourceFile);
+
+            // walk through lines for collecting right namespaces
+            $hasNs = false;
+            $closeNs = false;
+            foreach ($sourceFile as $i => $line) {
+                $trimmedLine = trim($line);
+
+                // remove opening and closing tag lines
+                if ($trimmedLine === '<?php' || $trimmedLine === '?>') {
+                    unset($sourceFile[$i]);
+                    continue;
+                }
+
+                // rebuild namespace with ; to namespace with {}
+                if (substr($trimmedLine, 0, $nsLength) === $ns) {
+                    $hasNs = true;
+                    if (substr($trimmedLine, -1) === ';') {
+                        // TODO: "use" statements are required to be placed after the "namespace my\space" but before the "{". 
+                        $sourceFile[$i] = substr($trimmedLine, 0, -1) . '{';
+                        $closeNs = true;
+                    }
+                }
+            }
+
+//            $package .= "if (!class_exists('$className', false)) {\n";
+            if (!$hasNs) {
+                $package .= "namespace {\n";
+                $closeNs = true;
+            }
+
+            $package .= "//start of file: '$fileName'\n";
+            $package .= implode("\n", $sourceFile);
+            $package .= "\n//end of file: '$fileName'\n";
+
+            if ($closeNs) {
+                $package .= "}\n";
+            }
+
+//            $package .= "}\n\n";
         }
         $packageFilename = $this->getPackageFilename($id);
+        file_put_contents("$this->packageFilePath/$packageFilename.meta", substr($meta, 0, -1) . "\n }\n}");
         file_put_contents("$this->packageFilePath/$packageFilename", $package);
     }
 
