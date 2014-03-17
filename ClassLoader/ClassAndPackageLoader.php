@@ -1,4 +1,12 @@
 <?php
+/*
+ * This file is part of the Behind-Project (https://github.com/glady/Behind).
+ *
+ * (c) Mike Gladysch <mail@mike-gladysch.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace glady\Behind\ClassLoader;
 
@@ -57,7 +65,7 @@ class ClassAndPackageLoader extends ClassLoader
                 if ($eventData[ClassLoader::LOAD_STATE_LOADED] === true) {
                     $className = $eventData[ClassLoader::LOAD_STATE_CLASS_NAME];
                     $fileName = $eventData[ClassLoader::LOAD_STATE_FILE_NAME];
-                    $me->addClassToPackage($id, $className, $fileName);
+                    $me->addClassToPackage($id, $className, $fileName, "package-$id");
                 }
             });
         }
@@ -85,6 +93,7 @@ class ClassAndPackageLoader extends ClassLoader
         if ($this->isPackageActive($id)) {
             $this->packages[$id]['active'] = false;
             $this->writeStoredPackage($id);
+            $this->un(self::ON_AFTER_LOAD, "package-$id");
         }
     }
 
@@ -119,9 +128,14 @@ class ClassAndPackageLoader extends ClassLoader
     {
         $package = "<?php\n";
         foreach ($this->packages[$id]['classMap'] as $className => $fileName) {
-            $package .= "if (!class_exists('$className', false)) {\n//start of file: '$fileName' ?>";
+            $package .= "if (!class_exists('$className', false)) {\n"
+                . "//start of file: '$fileName'"; // \n";
+            // TODO: this code only works for classes with opening <?php but no closing tag
+            $package .= "?>\n";
+            // TODO: for general support, we would have to remove first/last(if exist) php-open/close tags from content below
             $package .= file_get_contents($fileName);
-            $package .= "\n//end of file: '$fileName'\n}\n\n";
+            $package .= "\n//end of file: '$fileName'\n"
+                . "}\n\n";
         }
         $packageFilename = $this->getPackageFilename($id);
         file_put_contents("$this->packageFilePath/$packageFilename", $package);
@@ -145,4 +159,4 @@ class ClassAndPackageLoader extends ClassLoader
     {
         return isset($this->packages[$id]['active']) && $this->packages[$id]['active'] === true;
     }
-} 
+}

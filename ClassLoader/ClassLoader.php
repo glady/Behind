@@ -1,6 +1,11 @@
 <?php
 /*
- * TODO license
+ * This file is part of the Behind-Project (https://github.com/glady/Behind).
+ *
+ * (c) Mike Gladysch <mail@mike-gladysch.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace glady\Behind\ClassLoader;
@@ -12,6 +17,7 @@ namespace glady\Behind\ClassLoader;
 class ClassLoader
 {
 
+    //<editor-fold desc="Constants">
     /** mapping constants */
     const LOAD_FUNCTION             = 'loadClass';
 
@@ -30,7 +36,9 @@ class ClassLoader
 
     /** Config constants */
     const CONFIG_LOAD_RULE_ORDERED  = 'config_rules';
+    //</editor-fold>
 
+    //<editor-fold desc="Class Variables">
     /** @var array */
     protected $config = array();
 
@@ -40,7 +48,12 @@ class ClassLoader
     /** @var array */
     protected $rememberedLoadedClasses = array();
 
+    /** @var int */
+    protected $autoIndex = 1;
+    //</editor-fold>
 
+
+    //<editor-fold desc="Registering as autoloader">
     /**
      * @param object $autoLoader - instance of any classLoader class with loading classes within $fn
      * @param string $fn
@@ -61,8 +74,10 @@ class ClassLoader
     {
         self::registerAutoLoader($this);
     }
+    //</editor-fold>
 
 
+    //<editor-fold desc="Class loading">
     /**
      * @param string $className
      */
@@ -72,7 +87,6 @@ class ClassLoader
         $state = array(
             self::LOAD_STATE_LOADED     => false,
             self::LOAD_STATE_CLASS_NAME => $className,
-//            self::LOAD_STATE_RULE       => null,
             self::LOAD_STATE_FILE_NAME  => null
         );
 
@@ -83,7 +97,6 @@ class ClassLoader
         while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
             $fileName = $this->getFileNameByRule($rule, $className);
 
-//            $state[self::LOAD_STATE_RULE] = $rule;
             $state[self::LOAD_STATE_FILE_NAME] = $fileName;
 
             if ($fileName !== null && file_exists($fileName)) {
@@ -113,7 +126,7 @@ class ClassLoader
      * @param string $className
      * @param string $fileName
      */
-    public function rememberLoadedClass($className, $fileName)
+    private function rememberLoadedClass($className, $fileName)
     {
         $this->rememberedLoadedClasses[$className] = $fileName;
     }
@@ -174,6 +187,47 @@ class ClassLoader
 
         return $fileName;
     }
+    //</editor-fold>
+
+
+    //<editor-fold desc="Pseudo-Event handling">
+    /**
+     * @param string   $eventName
+     * @param callable $callable
+     * @param array    $options
+     * @param string   $name        [optional] is only needed when un-register an event is requested!
+     */
+    public function addEventListener($eventName, $callable, array $options = array(), $name = null)
+    {
+        $overwrite  = isset($options['overwrite'])  && (bool)$options['overwrite'];
+        if ($overwrite === true || !isset($this->events[$eventName])) {
+            $this->events[$eventName] = array();
+        }
+
+        // dispatching configuration
+        $break      = isset($options['breakEventOnReturnFalse']) && (bool)$options['breakEventOnReturnFalse'];
+
+        // how many times this will be called?
+        $single     = isset($options['single'])     && (bool)$options['single'];
+        $count      = $single ? 1 : (isset($options['count']) ? (int)$options['count'] : -1);
+
+        if ($name === null) {
+            $name = "auto-indexed-listener-" . $this->autoIndex++;
+        }
+
+        // register event internally
+        $this->events[$eventName][$name] = array('count' => $count, 'callable' => $callable, 'break' => $break);
+    }
+
+
+    /**
+     * @param string $eventName
+     * @param string $name
+     */
+    public function removeEventListener($eventName, $name)
+    {
+        unset($this->events[$eventName][$name]);
+    }
 
 
     /**
@@ -215,58 +269,10 @@ class ClassLoader
         }
         return true;
     }
+    //</editor-fold>
 
 
-    /**
-     * @param string   $eventName
-     * @param callable $callable
-     * @param array    $options
-     */
-    public function on($eventName, $callable, array $options = array())
-    {
-        $overwrite  = isset($options['overwrite'])  && (bool)$options['overwrite'];
-        if ($overwrite === true || !isset($this->events[$eventName])) {
-            $this->events[$eventName] = array();
-        }
-
-        // dispatching configuration
-        $break      = isset($options['breakEventOnReturnFalse']) && (bool)$options['breakEventOnReturnFalse'];
-
-        // how many times this will be called?
-        $single     = isset($options['single'])     && (bool)$options['single'];
-        $count      = $single ? 1 : (isset($options['count']) ? (int)$options['count'] : -1);
-
-        // register event internally
-        $this->events[$eventName][] = array('count' => $count, 'callable' => $callable, 'break' => $break);
-    }
-
-
-    /**
-     * @param string $configName
-     * @param mixed  $default
-     * @return mixed
-     */
-    public function getConfig($configName, $default = null)
-    {
-        return isset($this->config[$configName]) ? $this->config[$configName] : $default;
-    }
-
-
-    /**
-     * @param string $configName
-     * @param mixed  $value
-     */
-    public function setConfig($configName, $value)
-    {
-        if ($value === null) {
-            unset($this->config[$configName]);
-        }
-        else {
-            $this->config[$configName] = $value;
-        }
-    }
-
-
+    //<editor-fold desc="Short-Cut functions for define rules">
     /**
      * @param array $classMap
      */
@@ -316,4 +322,59 @@ class ClassLoader
         $rules[] = $rule;
         $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
     }
+
+
+    /**
+     * @param string $configName
+     * @param mixed  $default
+     * @return mixed
+     */
+    protected function getConfig($configName, $default = null)
+    {
+        return isset($this->config[$configName]) ? $this->config[$configName] : $default;
+    }
+
+
+    /**
+     * @param string $configName
+     * @param mixed  $value
+     */
+    protected function setConfig($configName, $value)
+    {
+        if ($value === null) {
+            unset($this->config[$configName]);
+        }
+        else {
+            $this->config[$configName] = $value;
+        }
+    }
+    //</editor-fold>
+
+
+    //<editor-fold desc="Short-Cut functions for event (un-)registering">
+    /**
+     * Short-Named function for addEventListener
+     *
+     * @param string   $eventName
+     * @param callable $callable
+     * @param array    $options
+     * @param string   $name        [optional] is only needed when un-register an event is requested!
+     */
+    public function on($eventName, $callable, array $options = array(), $name = null)
+    {
+        $this->addEventListener($eventName, $callable, $options, $name);
+    }
+
+
+    /**
+     * Short-Named function for removeEventListener
+     *
+     * @param string $eventName
+     * @param string $name
+     */
+    public function un($eventName, $name)
+    {
+        $this->removeEventListener($eventName, $name);
+    }
+    //</editor-fold>
 }
