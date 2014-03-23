@@ -50,6 +50,9 @@ class ClassLoaderTest extends TestCase
             array('namespace', '\TestFolder\TestClass2', true, __DIR__ . '/testData/TestFolder/TestClass2.php'),
             array('separator', 'TestFolder_TestClass', true, __DIR__ . '/testData/TestFolder/TestClass.php'),
 
+            array('separator',             'TestFolder', false),
+            array('separator-with-subdir', 'TestFolder', true, __DIR__ . '/testData/TestFolder/_TestFolder.php'),
+
             array('namespace', '\TestFolder\SomeInvalidClass', false),
             array('separator', 'TestFolder_SomeInvalidClass', false),
         );
@@ -70,6 +73,10 @@ class ClassLoaderTest extends TestCase
 
             case 'separator':
                 $cl->addSeparatorClassLoaderRule(__DIR__ . '/testData', '_');
+                break;
+
+            case 'separator-with-subdir':
+                $cl->addSeparatorClassLoaderRule(__DIR__ . '/testData', '_', array(), '_');
                 break;
 
             default:
