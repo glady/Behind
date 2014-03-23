@@ -15,3 +15,4 @@ Milestones
 1. *ClassLoader*-Instance which can be registered as php-autoloader
 2. *PackageHandler* as extension for ClassLoader
 3. *TestFramework* for simple test cases needed to test contained tools
+4. *ErrorHandler* and a class for *Debug*-Information
