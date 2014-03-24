@@ -153,29 +153,30 @@ class ClassAndPackageLoader extends ClassLoader
                 // rebuild namespace with ; to namespace with {}
                 if (substr($trimmedLine, 0, $nsLength) === $ns) {
                     $hasNs = true;
+                    // if not the "namespace xyz;" notation is used, the file itself does the right formatting!
+                    // when used: rebuild with {}
                     if (substr($trimmedLine, -1) === ';') {
-                        // TODO: "use" statements are required to be placed after the "namespace my\space" but before the "{". 
+                        // information: use CAN be placed within {}!
                         $sourceFile[$i] = substr($trimmedLine, 0, -1) . '{';
                         $closeNs = true;
                     }
                 }
             }
 
-//            $package .= "if (!class_exists('$className', false)) {\n";
             if (!$hasNs) {
                 $package .= "namespace {\n";
                 $closeNs = true;
             }
 
+            $package .= "if (!class_exists('$className', false)) {\n";
             $package .= "//start of file: '$fileName'\n";
             $package .= implode("\n", $sourceFile);
             $package .= "\n//end of file: '$fileName'\n";
+            $package .= "}\n";
 
             if ($closeNs) {
                 $package .= "}\n";
             }
-
-//            $package .= "}\n\n";
         }
         $packageFilename = $this->getPackageFilename($id);
         file_put_contents("$this->packageFilePath/$packageFilename.meta", substr($meta, 0, -1) . "\n }\n}");
