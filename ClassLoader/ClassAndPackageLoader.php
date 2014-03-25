@@ -176,7 +176,7 @@ class ClassAndPackageLoader extends ClassLoader
         $nsLength = strlen($ns);
         $hasNs = false;
         $closeNs = false;
-        $package = '';
+        $lastUseIndex = null;
         foreach ($phpCodeLines as $i => $line) {
             $trimmedLine = trim($line);
             // remove opening and closing tag lines
@@ -194,23 +194,41 @@ class ClassAndPackageLoader extends ClassLoader
                     $phpCodeLines[$i] = substr($trimmedLine, 0, -1) . '{';
                     $closeNs = true;
                 }
+                $lastUseIndex = $i;
             }
+
+            if (substr($trimmedLine, 0, 4) === 'use ') {
+                $lastUseIndex = $i;
+            }
+        }
+
+        $classCheck = "if (!class_exists('$className', false)) {";
+
+        $package = "//start of file: '$fileName'\n";
+
+        if ($lastUseIndex !== null) {
+            // there was an use or a namespace line -> append check as new line ofter that
+            $phpCodeLines[$lastUseIndex] .= "\n" . $classCheck;
         }
 
         if (!$hasNs) {
             $package .= "namespace {\n";
+            if ($lastUseIndex === null) {
+                $package .= "$classCheck\n";
+            }
             $closeNs = true;
         }
-        // TODO: this will have to be moved AFTER last "use" if exists...
-        // TODO: unit-tests for output!
-        $package .= "if (!class_exists('$className', false)) {\n";
-        $package .= "//start of file: '$fileName'\n";
-        $package .= implode("\n", $phpCodeLines);
-        $package .= "\n//end of file: '$fileName'\n";
+        $package .= implode("\n", $phpCodeLines) . "\n";
+
+        // attention: the "order" of the closing brackets is irrelevant! we have only to match the number of opened brackets
+        // close class check
         $package .= "}\n";
         if ($closeNs) {
+            // close namespace
             $package .= "}\n";
         }
+
+        $package .= "//end of file: '$fileName'\n";
 
         return $package;
     }
