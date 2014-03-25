@@ -128,55 +128,16 @@ class ClassAndPackageLoader extends ClassLoader
     {
         $meta = "{\n \"count\": " . count($this->packages[$id]['classMap']) . ",\n \"classMap\": {";
         $package = "<?php\n";
-        $ns = 'namespace';
-        $nsLength = strlen($ns);
         foreach ($this->packages[$id]['classMap'] as $className => $fileName) {
             $meta .= "\n  \"$className\": \"$fileName\",";
 
             // load file content
-            $sourceFile = file_get_contents($fileName);
-            $sourceFile = str_replace("\r", "", $sourceFile);
-            $sourceFile = explode("\n", $sourceFile);
+            $sourceFileContent = file_get_contents($fileName);
+            $sourceFileContent = str_replace("\r", "", $sourceFileContent);
+            $sourceFileContent = explode("\n", $sourceFileContent);
 
             // walk through lines for collecting right namespaces
-            $hasNs = false;
-            $closeNs = false;
-            foreach ($sourceFile as $i => $line) {
-                $trimmedLine = trim($line);
-
-                // remove opening and closing tag lines
-                if ($trimmedLine === '<?php' || $trimmedLine === '?>') {
-                    unset($sourceFile[$i]);
-                    continue;
-                }
-
-                // rebuild namespace with ; to namespace with {}
-                if (substr($trimmedLine, 0, $nsLength) === $ns) {
-                    $hasNs = true;
-                    // if not the "namespace xyz;" notation is used, the file itself does the right formatting!
-                    // when used: rebuild with {}
-                    if (substr($trimmedLine, -1) === ';') {
-                        // information: use CAN be placed within {}!
-                        $sourceFile[$i] = substr($trimmedLine, 0, -1) . '{';
-                        $closeNs = true;
-                    }
-                }
-            }
-
-            if (!$hasNs) {
-                $package .= "namespace {\n";
-                $closeNs = true;
-            }
-
-            $package .= "if (!class_exists('$className', false)) {\n";
-            $package .= "//start of file: '$fileName'\n";
-            $package .= implode("\n", $sourceFile);
-            $package .= "\n//end of file: '$fileName'\n";
-            $package .= "}\n";
-
-            if ($closeNs) {
-                $package .= "}\n";
-            }
+            $package .= $this->normalizeNamespaceForPackage($sourceFileContent, $className, $fileName);
         }
         $packageFilename = $this->getPackageFilename($id);
         file_put_contents("$this->packageFilePath/$packageFilename.meta", substr($meta, 0, -1) . "\n }\n}");
@@ -200,5 +161,57 @@ class ClassAndPackageLoader extends ClassLoader
     private function isPackageActive($id)
     {
         return isset($this->packages[$id]['active']) && $this->packages[$id]['active'] === true;
+    }
+
+
+    /**
+     * @param array  $phpCodeLines
+     * @param string $className
+     * @param string $fileName
+     * @return array
+     */
+    public function normalizeNamespaceForPackage(array $phpCodeLines, $className, $fileName)
+    {
+        $ns = 'namespace';
+        $nsLength = strlen($ns);
+        $hasNs = false;
+        $closeNs = false;
+        $package = '';
+        foreach ($phpCodeLines as $i => $line) {
+            $trimmedLine = trim($line);
+            // remove opening and closing tag lines
+            if ($trimmedLine === '<?php' || $trimmedLine === '?>') {
+                unset($phpCodeLines[$i]);
+                continue;
+            }
+            // rebuild namespace with ; to namespace with {}
+            if (substr($trimmedLine, 0, $nsLength) === $ns) {
+                $hasNs = true;
+                // if not the "namespace xyz;" notation is used, the file itself does the right formatting!
+                // when used: rebuild with {}
+                if (substr($trimmedLine, -1) === ';') {
+                    // information: use CAN be placed within {}!
+                    $phpCodeLines[$i] = substr($trimmedLine, 0, -1) . '{';
+                    $closeNs = true;
+                }
+            }
+        }
+
+        if (!$hasNs) {
+            $package .= "namespace {\n";
+            $closeNs = true;
+        }
+        // TODO: this will have to be moved AFTER last "use" if exists...
+        // TODO: unit-tests for output!
+        $package .= "if (!class_exists('$className', false)) {\n";
+        $package .= "//start of file: '$fileName'\n";
+        $package .= implode("\n", $phpCodeLines);
+        $package .= "\n//end of file: '$fileName'\n";
+        $package .= "}\n";
+        if ($closeNs) {
+            $package .= "}\n";
+        }
+
+        return $package;
     }
 }
