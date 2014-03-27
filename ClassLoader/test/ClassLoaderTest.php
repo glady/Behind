@@ -2,9 +2,6 @@
 
 namespace glady\Behind\ClassLoader\test;
 
-require_once __DIR__ . '/../ClassLoader.php';
-require_once __DIR__ . '/../../TestFramework/UnitTest/TestCase.php';
-
 use glady\Behind\ClassLoader\ClassLoader;
 use glady\Behind\TestFramework\UnitTest\TestCase;
 
@@ -12,7 +9,7 @@ class ClassLoaderTest extends TestCase
 {
     public function testClassExists()
     {
-        $this->assertTrue(class_exists('\glady\Behind\ClassLoader\ClassLoader', false));
+        $this->assertTrue(class_exists('\glady\Behind\ClassLoader\ClassLoader'));
     }
 
 
