@@ -7,10 +7,8 @@ use glady\Behind\TestFramework\UnitTest\TestCase;
 
 class ClassLoaderTest extends TestCase
 {
-    public function testClassExists()
-    {
-        $this->assertTrue(class_exists('\glady\Behind\ClassLoader\ClassLoader'));
-    }
+
+    protected $className = '\glady\Behind\ClassLoader\ClassLoader';
 
 
     /**

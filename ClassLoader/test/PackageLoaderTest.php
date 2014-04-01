@@ -24,11 +24,7 @@ class PackageLoaderTest extends TestCase
     const CLASSNAME = 'TestClass';
     const TESTNAMESPACE = 'TestNamespace';
 
-
-    public function testClassExists()
-    {
-        $this->assertTrue(class_exists('\glady\Behind\ClassLoader\ClassAndPackageLoader'));
-    }
+    protected $className = '\glady\Behind\ClassLoader\ClassAndPackageLoader';
 
 
     /**
