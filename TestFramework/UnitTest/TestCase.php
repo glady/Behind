@@ -3,7 +3,21 @@
 namespace glady\Behind\TestFramework\UnitTest;
 
 
-class TestCase extends \PHPUnit_Framework_TestCase
+
+abstract class TestCase extends \PHPUnit_Framework_TestCase
 {
 
+    /** @var string */
+    protected $className = null;
+
+
+    /**
+     *
+     */
+    public function testClassIsDefined()
+    {
+        if ($this->className) {
+            $this->assertTrue(class_exists($this->className));
+        }
+    }
 } 

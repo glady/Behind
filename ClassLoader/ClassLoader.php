@@ -16,6 +16,7 @@ namespace glady\Behind\ClassLoader;
  */
 class ClassLoader
 {
+    const CLASSNAME = __CLASS__;
 
     //<editor-fold desc="Constants">
     /** mapping constants */
@@ -27,6 +28,7 @@ class ClassLoader
     const ON_RULE_DOES_NOT_MATCH    = 'rule_does_not_match';
     const ON_BEFORE_REQUIRE         = 'before_require';
     const ON_AFTER_REQUIRE          = 'after_require';
+    const ON_ALL                    = 'all';
 
     /** load state constants */
     const LOAD_STATE_CLASS_NAME     = 'className';
@@ -79,42 +81,69 @@ class ClassLoader
 
     //<editor-fold desc="Class loading">
     /**
+     * @param $className
+     * @return bool
+     */
+    protected function classExists($className)
+    {
+        return class_exists($className, false);
+    }
+
+
+    /**
+     * @param $fileName
+     * @return bool
+     */
+    protected function fileExists($fileName)
+    {
+        return file_exists($fileName);
+    }
+
+
+    /**
+     * @param $fileName
+     */
+    protected function includeFile($fileName)
+    {
+        include $fileName;
+    }
+
+
+    /**
      * @param string $className
      */
     public function loadClass($className)
     {
-        // initial event data array, loaded false and requested class name
         $state = array(
             self::LOAD_STATE_LOADED     => false,
             self::LOAD_STATE_CLASS_NAME => $className,
             self::LOAD_STATE_FILE_NAME  => null
         );
 
-        // fire before load
         $this->fire(self::ON_BEFORE_LOAD, $state);
 
-        $autoloadRules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
-        while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
-            $fileName = $this->getFileNameByRule($rule, $className);
+        if (!$this->classExists($className)) {
+            $autoloadRules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
+            while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
+                $fileName = $this->getFileNameByRule($rule, $className);
 
-            $state[self::LOAD_STATE_FILE_NAME] = $fileName;
+                $state[self::LOAD_STATE_FILE_NAME] = $fileName;
 
-            if ($fileName !== null && file_exists($fileName)) {
-                $this->fire(self::ON_BEFORE_REQUIRE, $state);
+                if ($fileName !== null && $this->fileExists($fileName)) {
+                    $this->fire(self::ON_BEFORE_REQUIRE, $state);
 
-                // require file
-                include $fileName;
+                    $this->includeFile($fileName);
 
-                // check if include was successful - set
-                if (class_exists($className, false)) {
-                    $this->rememberLoadedClass($className, $fileName);
-                    $state[self::LOAD_STATE_LOADED] = true;
-                    $this->fire(self::ON_AFTER_REQUIRE, $state);
+                    if ($this->classExists($className)) {
+                        $this->rememberLoadedClass($className, $fileName);
+                        $state[self::LOAD_STATE_LOADED] = true;
+                        $this->fire(self::ON_AFTER_REQUIRE, $state);
+                    }
                 }
-            }
-            else {
-                $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
-                $fileName = null;
+                else {
+                    $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
+                    $fileName = null;
+                }
             }
         }
 
@@ -192,6 +221,21 @@ class ClassLoader
 
     //<editor-fold desc="Pseudo-Event handling">
     /**
+     * @return array
+     */
+    public function getDefinedEventNames()
+    {
+        return array(
+            self::ON_BEFORE_LOAD,
+            self::ON_AFTER_LOAD,
+            self::ON_RULE_DOES_NOT_MATCH,
+            self::ON_BEFORE_REQUIRE,
+            self::ON_AFTER_REQUIRE
+        );
+    }
+
+
+    /**
      * @param string   $eventName
      * @param callable $callable
      * @param array    $options
@@ -199,6 +243,15 @@ class ClassLoader
      */
     public function addEventListener($eventName, $callable, array $options = array(), $name = null)
     {
+
+        if ($eventName === self::ON_ALL) {
+            $eventNames = $this->getDefinedEventNames();
+            foreach ($eventNames as $eventName) {
+                $this->addEventListener($eventName, $callable, $options, $name);
+            }
+            return;
+        }
+
         $overwrite  = isset($options['overwrite'])  && (bool)$options['overwrite'];
         if ($overwrite === true || !isset($this->events[$eventName])) {
             $this->events[$eventName] = array();
