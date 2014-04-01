@@ -92,6 +92,16 @@ class ClassLoader
 
     /**
      * @param $fileName
+     * @return bool
+     */
+    protected function fileExists($fileName)
+    {
+        return file_exists($fileName);
+    }
+
+
+    /**
+     * @param $fileName
      */
     protected function includeFile($fileName)
     {
@@ -104,42 +114,36 @@ class ClassLoader
      */
     public function loadClass($className)
     {
-        // handle case, that classLoader is NOT used as autoloader. then this CAN occur and causes FATAL errors
-        if ($this->classExists($className)) {
-            return;
-        }
-
-        // initial event data array, loaded false and requested class name
         $state = array(
             self::LOAD_STATE_LOADED     => false,
             self::LOAD_STATE_CLASS_NAME => $className,
             self::LOAD_STATE_FILE_NAME  => null
         );
 
-        // fire before load
         $this->fire(self::ON_BEFORE_LOAD, $state);
 
-        $autoloadRules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
-        while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
-            $fileName = $this->getFileNameByRule($rule, $className);
+        if (!$this->classExists($className)) {
+            $autoloadRules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
+            while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
+                $fileName = $this->getFileNameByRule($rule, $className);
 
-            $state[self::LOAD_STATE_FILE_NAME] = $fileName;
+                $state[self::LOAD_STATE_FILE_NAME] = $fileName;
 
-            if ($fileName !== null && file_exists($fileName)) {
-                $this->fire(self::ON_BEFORE_REQUIRE, $state);
+                if ($fileName !== null && $this->fileExists($fileName)) {
+                    $this->fire(self::ON_BEFORE_REQUIRE, $state);
 
-                $this->includeFile($fileName);
+                    $this->includeFile($fileName);
 
-                // check if include was successful - set
-                if ($this->classExists($className)) {
-                    $this->rememberLoadedClass($className, $fileName);
-                    $state[self::LOAD_STATE_LOADED] = true;
-                    $this->fire(self::ON_AFTER_REQUIRE, $state);
+                    if ($this->classExists($className)) {
+                        $this->rememberLoadedClass($className, $fileName);
+                        $state[self::LOAD_STATE_LOADED] = true;
+                        $this->fire(self::ON_AFTER_REQUIRE, $state);
+                    }
                 }
-            }
-            else {
-                $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
-                $fileName = null;
+                else {
+                    $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
+                    $fileName = null;
+                }
             }
         }
 

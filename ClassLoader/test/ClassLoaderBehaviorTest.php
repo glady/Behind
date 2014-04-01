@@ -12,6 +12,7 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     public function testNonRegisteredClassLoader()
     {
         $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
         $this->givenIHaveNotConfiguredClassLoader();
         $this->whenITryToLoadExistingClass('TestFolder_TestClass');
         $this->thenIShouldNotHaveTriedToLoadAnything();
@@ -21,25 +22,27 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     public function testRegisteredSeparatorRuleClassLoader()
     {
         $this->givenIHaveAClassLoader();
-        $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', __DIR__ . '/testData');
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
+        $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', '/');
         $this->whenITryToLoadExistingClass('TestFolder_TestClass');
-        $this->thenIShouldHaveLoadedFile(__DIR__ . '/testData/TestFolder/TestClass.php');
-    }
-
-
-    public function testRegisteredNamespaceRuleClassLoader()
-    {
-        $this->givenIHaveAClassLoader();
-        $this->givenIHaveANamespaceRuleOnDirectory(__DIR__ . '/testData');
-        $this->whenITryToLoadExistingClass('\TestFolder\TestClass2');
-        $this->thenIShouldHaveLoadedFile(__DIR__ . '/testData/TestFolder/TestClass2.php');
+        $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass.php');
     }
 
 
     public function testRegisteredSeparatorRuleClassLoaderLoadClassTwice()
     {
         $this->testRegisteredSeparatorRuleClassLoader();
-        $this->whenITryToLoadExistingClass('TestFolder_TestClass');
-        $this->theNoFatalErrorShouldOccur();
+        $this->whenITryToLoadExistingClassASecondTime('TestFolder_TestClass');
+        $this->thenIShouldNotHaveTriedToLoadAnything();
     }
-} 
+
+
+    public function testRegisteredNamespaceRuleClassLoader()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass2.php', array('\TestFolder\TestClass2'));
+        $this->givenIHaveANamespaceRuleOnDirectory('/');
+        $this->whenITryToLoadExistingClass('\TestFolder\TestClass2');
+        $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass2.php');
+    }
+}

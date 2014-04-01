@@ -38,20 +38,38 @@ abstract class ClassLoaderBehavior extends TestCase
 
     protected function givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory($separator, $directory)
     {
+        $directory = $this->makePathOsDependentValid($directory);
         $this->numberOfRules++;
         $this->classLoader->addSeparatorClassLoaderRule($directory, $separator);
     }
 
     protected function givenIHaveANamespaceRuleOnDirectory($directory)
     {
+        $directory = $this->makePathOsDependentValid($directory);
         $this->numberOfRules++;
         $this->classLoader->addNamespaceClassLoaderRule($directory);
+    }
+
+
+
+    protected function givenIHaveAPhpFile_ThatContainsClasses($file, $classes)
+    {
+        $file = $this->makePathOsDependentValid($file);
+        $this->classLoader->fileToClassMap[$file] = $classes;
     }
 
     protected function whenITryToLoadExistingClass($className)
     {
         $this->loadedClassName = $className;
         $this->classLoader->loadClass($className);
+    }
+
+
+    protected function whenITryToLoadExistingClassASecondTime($className)
+    {
+        // reset eventData!
+        $this->classLoader->_eventsFired = array();
+        $this->whenITryToLoadExistingClass($className);
     }
 
 
@@ -85,6 +103,8 @@ abstract class ClassLoaderBehavior extends TestCase
 
     protected function thenIShouldHaveLoadedFile($file)
     {
+        $file = $this->makePathOsDependentValid($file);
+
         $eventsFired = $this->classLoader->_eventsFired;
 
         $state = array(
@@ -99,7 +119,7 @@ abstract class ClassLoaderBehavior extends TestCase
 
         // after load should be fired with "file loaded" state
         $state[ClassLoader::LOAD_STATE_LOADED] = true;
-        $state[ClassLoader::LOAD_STATE_FILE_NAME] = realpath($file);
+        $state[ClassLoader::LOAD_STATE_FILE_NAME] = $file;
         $this->assertArrayHasKey(ClassLoader::ON_AFTER_LOAD, $eventsFired);
         $this->assertEquals(array($state), $eventsFired[ClassLoader::ON_AFTER_LOAD]);
 
@@ -117,6 +137,16 @@ abstract class ClassLoaderBehavior extends TestCase
     {
         $this->markTestIncomplete("Behavior function '$name' is not implemented yet");
     }
+
+    /**
+     * @param $file
+     * @return mixed
+     */
+    private function makePathOsDependentValid($file)
+    {
+        $file = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $file);
+        return $file;
+    }
 }
 
 
@@ -124,6 +154,10 @@ class MockClassLoader extends ClassLoader
 {
     /** @var array */
     public $_eventsFired = array();
+
+    public $loadedClasses = array();
+    public $fileToClassMap = array();
+
 
     /**
      * Constructor
@@ -135,6 +169,24 @@ class MockClassLoader extends ClassLoader
         $this->on(self::ON_ALL, function ($classLoader, $eventName, $eventData) use ($me) {
             $me->_eventsFired[$eventName][] = $eventData;
         });
+        //$this->loadedClasses = get_declared_classes();
     }
 
+
+    protected function classExists($className)
+    {
+        return in_array($className, $this->loadedClasses);
+    }
+
+
+    protected function fileExists($fileName)
+    {
+        return isset($this->fileToClassMap[$fileName]);
+    }
+
+
+    protected function includeFile($fileName)
+    {
+        $this->loadedClasses = array_merge($this->loadedClasses, $this->fileToClassMap[$fileName]);
+    }
 }
