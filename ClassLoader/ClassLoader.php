@@ -183,7 +183,7 @@ class ClassLoader
                     $root   = isset($rule['root'])      ? $rule['root']         : __DIR__;
 
                     foreach ($fixed as $fixedClassNamePart => $fixedDir) {
-                        if (strpos($className, $fixedClassNamePart) !== 0) {
+                        if (strpos($className, $fixedClassNamePart) === 0) {
                             $className = substr($className, strlen($fixedClassNamePart));
                             $root = $fixedDir;
                             break;
