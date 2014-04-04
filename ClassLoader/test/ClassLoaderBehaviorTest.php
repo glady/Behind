@@ -65,4 +65,46 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->whenITryToLoadExistingClass('\TestFolder\TestClass2');
         $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass2.php');
     }
+
+
+    public function testNotMatchingRulesAndAMatchingFirstRuleClassLoader()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('\TestFolder\TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/__TestClass.php', array('SomeOtherClass'));
+        $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', '/'); // should match
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '__', '/'); // should not match
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '_', '/'); // should not match
+        $this->whenITryToLoadExistingClass('TestFolder_TestClass');
+        $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass.php');
+    }
+
+
+    public function testNotMatchingRulesAndAMatchingMiddleRuleClassLoader()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('\TestFolder\TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/__TestClass.php', array('SomeOtherClass'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '__', '/'); // should not match
+        $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', '/'); // should match
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '_', '/'); // should not match
+        $this->whenITryToLoadExistingClass('TestFolder_TestClass');
+        $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass.php');
+    }
+
+
+    public function testNotMatchingRulesAndAMatchingLastRuleClassLoader()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('\TestFolder\TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/__TestClass.php', array('SomeOtherClass'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '__', '/'); // should not match
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '_', '/'); // should not match
+        $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', '/'); // should match
+        $this->whenITryToLoadExistingClass('TestFolder_TestClass');
+        $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass.php');
+    }
 }
