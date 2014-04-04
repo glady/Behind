@@ -36,6 +36,7 @@ abstract class ClassLoaderBehavior extends TestCase
         // do nothing ;)
     }
 
+
     protected function givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory($separator, $directory)
     {
         $directory = $this->makePathOsDependentValid($directory);
@@ -43,13 +44,30 @@ abstract class ClassLoaderBehavior extends TestCase
         $this->classLoader->addSeparatorClassLoaderRule($directory, $separator);
     }
 
+
+    protected function givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory($separator, $specialChar, $directory)
+    {
+        $directory = $this->makePathOsDependentValid($directory);
+        $this->numberOfRules++;
+        $this->classLoader->addSeparatorClassLoaderRule($directory, $separator, array(), $specialChar);
+    }
+
+
+    protected function givenIHaveASeparatorRuleWith_AndFixedNamespace_OnDirectory_AsSeparatorOnDirectory($separator, $namspace, $fixedNamespaceDir, $directory)
+    {
+        $directory = $this->makePathOsDependentValid($directory);
+        $fixedNamespaceDir = $this->makePathOsDependentValid($fixedNamespaceDir);
+        $this->numberOfRules++;
+        $this->classLoader->addSeparatorClassLoaderRule($directory, $separator, array($namspace => $fixedNamespaceDir));
+    }
+
+
     protected function givenIHaveANamespaceRuleOnDirectory($directory)
     {
         $directory = $this->makePathOsDependentValid($directory);
         $this->numberOfRules++;
         $this->classLoader->addNamespaceClassLoaderRule($directory);
     }
-
 
 
     protected function givenIHaveAPhpFile_ThatContainsClasses($file, $classes)
@@ -106,7 +124,6 @@ abstract class ClassLoaderBehavior extends TestCase
         $file = $this->makePathOsDependentValid($file);
 
         $eventsFired = $this->classLoader->_eventsFired;
-
         $state = array(
             ClassLoader::LOAD_STATE_LOADED     => false,
             ClassLoader::LOAD_STATE_CLASS_NAME => $this->loadedClassName,

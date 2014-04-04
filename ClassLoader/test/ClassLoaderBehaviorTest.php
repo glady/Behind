@@ -29,6 +29,26 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     }
 
 
+    public function testRegisteredSeparatorWithSubDirMappingRuleClassLoader()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('TestFolder_TestClass'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '_', '/');
+        $this->whenITryToLoadExistingClass('TestFolder_TestClass');
+        $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass/_TestClass.php');
+    }
+
+
+    public function testRegisteredSeparatorWithFixedNamespaceRuleClassLoader()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/somewhere/myNamespace/TestFolder/TestClass.php', array('SomeLibrary_TestFolder_TestClass'));
+        $this->givenIHaveASeparatorRuleWith_AndFixedNamespace_OnDirectory_AsSeparatorOnDirectory('_', 'SomeLibrary', '/somewhere/myNamespace', '/');
+        $this->whenITryToLoadExistingClass('SomeLibrary_TestFolder_TestClass');
+        $this->thenIShouldHaveLoadedFile('/somewhere/myNamespace/TestFolder/TestClass.php');
+    }
+
+
     public function testRegisteredSeparatorRuleClassLoaderLoadClassTwice()
     {
         $this->testRegisteredSeparatorRuleClassLoader();
