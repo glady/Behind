@@ -182,11 +182,14 @@ class ClassLoader
                     $fixed  = isset($rule['fixed'])     ? $rule['fixed']        : array();
                     $root   = isset($rule['root'])      ? $rule['root']         : __DIR__;
 
+                    $originalClassName = $className;
+                    $matchingLength = 0;
                     foreach ($fixed as $fixedClassNamePart => $fixedDir) {
-                        if (strpos($className, $fixedClassNamePart) === 0) {
-                            $className = substr($className, strlen($fixedClassNamePart));
+                        $length = strlen($fixedClassNamePart);
+                        if ($length > $matchingLength && strpos($originalClassName, $fixedClassNamePart) === 0) {
+                            $className = substr($originalClassName, $length);
+                            $matchingLength = $length;
                             $root = $fixedDir;
-                            break;
                         }
                     }
 

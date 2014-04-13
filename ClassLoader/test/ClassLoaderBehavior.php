@@ -53,15 +53,16 @@ abstract class ClassLoaderBehavior extends TestCase
     }
 
 
-    protected function givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespace_OnDirectory(
-        $separator, $specialChar, $directory, $fixedNamespace, $fixedDirectory
+    protected function givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespaceDefinition(
+        $separator, $specialChar, $directory, $fixedNamespaceDefinition
     )
     {
         $directory = $this->makePathOsDependentValid($directory);
-        $fixedDirectory = $this->makePathOsDependentValid($fixedDirectory);
+        foreach ($fixedNamespaceDefinition as &$fixedDirectory) {
+            $fixedDirectory = $this->makePathOsDependentValid($fixedDirectory);
+        }
         $this->numberOfRules++;
-        $this->classLoader->addSeparatorClassLoaderRule($directory, $separator, array($fixedNamespace => $fixedDirectory), $specialChar);
-
+        $this->classLoader->addSeparatorClassLoaderRule($directory, $separator, $fixedNamespaceDefinition, $specialChar);
     }
 
 
@@ -130,6 +131,7 @@ abstract class ClassLoaderBehavior extends TestCase
         $this->assertArrayNotHasKey(ClassLoader::ON_AFTER_REQUIRE, $eventsFired);
         $this->assertArrayNotHasKey(ClassLoader::ON_RULE_DOES_NOT_MATCH, $eventsFired);
     }
+
 
     protected function thenIShouldHaveLoadedFile($file)
     {
