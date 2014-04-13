@@ -53,7 +53,7 @@ abstract class ClassLoaderBehavior extends TestCase
     }
 
 
-    protected function givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespace_OnDirectiory(
+    protected function givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespace_OnDirectory(
         $separator, $specialChar, $directory, $fixedNamespace, $fixedDirectory
     )
     {

@@ -123,7 +123,7 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     {
         $this->givenIHaveAClassLoader();
         $this->givenIHaveAPhpFile_ThatContainsClasses('/_Behind.php', array('\glady\Behind'));
-        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespace_OnDirectiory('\\', '_', '/', '\glady\Behind', '/');
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespace_OnDirectory('\\', '_', '/', '\glady\Behind', '/');
         $this->whenITryToLoadExistingClass('\glady\Behind');
         $this->thenIShouldHaveLoadedFile('/_Behind.php');
     }
