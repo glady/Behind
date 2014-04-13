@@ -2,9 +2,32 @@
 
 namespace glady;
 
+use glady\Behind\ClassLoader\ClassLoader;
+
 class Behind
 {
     const VERSION = 'dev';
+
+    /** @var ClassLoader */
+    private static $classLoader = null;
+
+
+    /**
+     * @param ClassLoader $classLoader
+     */
+    public static function setClassLoader(ClassLoader $classLoader)
+    {
+        static::$classLoader = $classLoader;
+    }
+
+
+    /**
+     * @return ClassLoader
+     */
+    public static function getClassLoader()
+    {
+        return static::$classLoader;
+    }
 
 
     /**

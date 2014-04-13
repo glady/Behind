@@ -107,4 +107,25 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->whenITryToLoadExistingClass('TestFolder_TestClass');
         $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass.php');
     }
+
+
+    public function testLoadRootCLassMappedWithSubDirMapping()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/glady/Behind/_Behind.php', array('\glady\Behind'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('\\', '_', '/');
+        $this->whenITryToLoadExistingClass('\glady\Behind');
+        $this->thenIShouldHaveLoadedFile('/glady/Behind/_Behind.php');
+    }
+
+
+    public function testLoadRootClassOfFixedNamespaceWithSubDirMapping()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/_Behind.php', array('\glady\Behind'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespace_OnDirectiory('\\', '_', '/', '\glady\Behind', '/');
+        $this->whenITryToLoadExistingClass('\glady\Behind');
+        $this->thenIShouldHaveLoadedFile('/_Behind.php');
+    }
+
 }

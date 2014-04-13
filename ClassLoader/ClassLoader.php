@@ -203,12 +203,17 @@ class ClassLoader
                     unset($rule['subDirPrefix']);
                     $rule['type'] = 'separator';
                     $separatorFileName = $this->getFileNameByRule($rule, $className);
-                    $filePos = strrpos($separatorFileName, DIRECTORY_SEPARATOR);
-                    if ($filePos !== false) {
-                        $fileName = substr($separatorFileName, 0, $filePos) . DIRECTORY_SEPARATOR
-                            . substr($separatorFileName, $filePos + 1, -4) . DIRECTORY_SEPARATOR
-                            . $subDirPrefix . substr($separatorFileName, $filePos + 1);
-
+                    if (substr($separatorFileName, -5) === DIRECTORY_SEPARATOR . '.php') {
+                        $lastNamespacePart = substr($className, strrpos($className, '\\') + 1);
+                        $fileName = substr($separatorFileName, 0, -4) . $subDirPrefix . $lastNamespacePart . '.php';
+                    }
+                    else {
+                        $filePos = strrpos($separatorFileName, DIRECTORY_SEPARATOR);
+                        if ($filePos !== false) {
+                            $fileName = substr($separatorFileName, 0, $filePos) . DIRECTORY_SEPARATOR
+                                . substr($separatorFileName, $filePos + 1, -4) . DIRECTORY_SEPARATOR
+                                . $subDirPrefix . substr($separatorFileName, $filePos + 1);
+                        }
                     }
                     break;
             }

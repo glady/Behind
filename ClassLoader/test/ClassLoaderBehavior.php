@@ -53,6 +53,18 @@ abstract class ClassLoaderBehavior extends TestCase
     }
 
 
+    protected function givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespace_OnDirectiory(
+        $separator, $specialChar, $directory, $fixedNamespace, $fixedDirectory
+    )
+    {
+        $directory = $this->makePathOsDependentValid($directory);
+        $fixedDirectory = $this->makePathOsDependentValid($fixedDirectory);
+        $this->numberOfRules++;
+        $this->classLoader->addSeparatorClassLoaderRule($directory, $separator, array($fixedNamespace => $fixedDirectory), $specialChar);
+
+    }
+
+
     protected function givenIHaveASeparatorRuleWith_AndFixedNamespace_OnDirectory_AsSeparatorOnDirectory($separator, $namspace, $fixedNamespaceDir, $directory)
     {
         $directory = $this->makePathOsDependentValid($directory);
