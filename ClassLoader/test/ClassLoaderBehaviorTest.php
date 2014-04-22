@@ -60,9 +60,9 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     public function testRegisteredNamespaceRuleClassLoader()
     {
         $this->givenIHaveAClassLoader();
-        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass2.php', array('\TestFolder\TestClass2'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass2.php', array('TestFolder\TestClass2'));
         $this->givenIHaveANamespaceRuleOnDirectory('/');
-        $this->whenITryToLoadExistingClass('\TestFolder\TestClass2');
+        $this->whenITryToLoadExistingClass('TestFolder\TestClass2');
         $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass2.php');
     }
 
@@ -71,7 +71,7 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     {
         $this->givenIHaveAClassLoader();
         $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
-        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('\TestFolder\TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('TestFolder\TestClass'));
         $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/__TestClass.php', array('SomeOtherClass'));
         $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', '/'); // should match
         $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '__', '/'); // should not match
@@ -85,7 +85,7 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     {
         $this->givenIHaveAClassLoader();
         $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
-        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('\TestFolder\TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('TestFolder\TestClass'));
         $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/__TestClass.php', array('SomeOtherClass'));
         $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '__', '/'); // should not match
         $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', '/'); // should match
@@ -99,7 +99,7 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
     {
         $this->givenIHaveAClassLoader();
         $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClass'));
-        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('\TestFolder\TestClass'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('TestFolder\TestClass'));
         $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/__TestClass.php', array('SomeOtherClass'));
         $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '__', '/'); // should not match
         $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '_', '/'); // should not match
@@ -107,4 +107,44 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->whenITryToLoadExistingClass('TestFolder_TestClass');
         $this->thenIShouldHaveLoadedFile('/TestFolder/TestClass.php');
     }
+
+
+    public function testLoadRootCLassMappedWithSubDirMapping()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/glady/Behind/_Behind.php', array('glady\Behind'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('\\', '_', '/');
+        $this->whenITryToLoadExistingClass('glady\Behind');
+        $this->thenIShouldHaveLoadedFile('/glady/Behind/_Behind.php');
+    }
+
+
+    public function testLoadRootClassOfFixedNamespaceWithSubDirMapping()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/_Behind.php', array('glady\Behind'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespaceDefinition(
+            '\\', '_', '/', array('glady\Behind' => '\\')
+        );
+        $this->whenITryToLoadExistingClass('glady\Behind');
+        $this->thenIShouldHaveLoadedFile('/_Behind.php');
+    }
+
+
+    public function testConflictingNamespaceFixturesDoesNotPreventLoadRightFile()
+    {
+        $fixedNamespaces = array(
+            'glady\Behind' => '/lib',
+            'glady\BehindTest' => '/test'
+        );
+
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/test/MyLittleTest/_MyLittleTest.php', array('glady\BehindTest\MyLittleTest'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory_AndWithFixedNamespaceDefinition(
+            '\\', '_', '/', $fixedNamespaces
+        );
+        $this->whenITryToLoadExistingClass('glady\BehindTest\MyLittleTest');
+        $this->thenIShouldHaveLoadedFile('/test/MyLittleTest/_MyLittleTest.php');
+    }
+
 }
