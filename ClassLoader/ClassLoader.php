@@ -171,9 +171,16 @@ class ClassLoader
         $fileName = null;
         if (isset($rule['type'])) {
             switch ($rule['type']) {
+                case 'callback':
+                    $fileName = call_user_func_array($rule['fn'], array($className));
+                    break;
+
                 case 'map':
                     if (isset($rule['classes'][$className])) {
                         $fileName = $rule['classes'][$className];
+                        if (isset($rule['baseDir'])) {
+                            $fileName = $rule['baseDir'] . DIRECTORY_SEPARATOR . $fileName;
+                        }
                     }
                     break;
 
@@ -337,13 +344,30 @@ class ClassLoader
     /**
      * @param array $classMap
      */
-    public function addClassMap(array $classMap)
+    public function addClassMap(array $classMap, $baseDir = null)
     {
         if (!empty($classMap)) {
             $rules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
             $rules[] = array(
                 'type' => 'map',
-                'classes' => $classMap
+                'classes' => $classMap,
+                'baseDir' => $baseDir
+            );
+            $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
+        }
+    }
+
+
+    /**
+     * @param callable $fn
+     */
+    public function addCallbackRule($fn)
+    {
+        if (is_callable($fn)) {
+            $rules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
+            $rules[] = array(
+                'type' => 'callback',
+                'fn' => $fn
             );
             $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
         }
