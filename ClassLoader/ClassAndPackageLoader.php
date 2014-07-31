@@ -28,6 +28,9 @@ class ClassAndPackageLoader extends ClassLoader
     /** @var array */
     protected $packages = array();
 
+    /** @var array */
+    protected $ignores = array();
+
 
     /**
      * @param string $version
@@ -126,9 +129,14 @@ class ClassAndPackageLoader extends ClassLoader
      */
     private function writeStoredPackage($id)
     {
-        $meta = "{\n \"count\": " . count($this->packages[$id]['classMap']) . ",\n \"classMap\": {";
+        $meta = "";
         $package = "<?php\n";
+        $ignoredCount = 0;
         foreach ($this->packages[$id]['classMap'] as $className => $fileName) {
+            if ($this->isClassNameIgnoredForPackage($className)) {
+                $ignoredCount++;
+                continue;
+            }
             $meta .= "\n  \"$className\": \"$fileName\",";
 
             // load file content
@@ -139,6 +147,12 @@ class ClassAndPackageLoader extends ClassLoader
             // walk through lines for collecting right namespaces
             $package .= $this->normalizeNamespaceForPackage($sourceFileContent, $className, $fileName);
         }
+
+        $meta = "{\n \"count\": " . count($this->packages[$id]['classMap']) . ","
+            . ($ignoredCount > 0 ? "\n \"ignored\": $ignoredCount," : "")
+            . "\n \"classMap\": {"
+            . $meta;
+
         $packageFilename = $this->getPackageFilename($id);
         file_put_contents("$this->packageFilePath/$packageFilename.meta", substr($meta, 0, -1) . "\n }\n}");
         file_put_contents("$this->packageFilePath/$packageFilename", $package);
@@ -231,5 +245,34 @@ class ClassAndPackageLoader extends ClassLoader
         $package .= "//end of file: '$fileName'\n";
 
         return $package;
+    }
+
+
+    /**
+     * @param $className
+     * @return bool
+     */
+    private function isClassNameIgnoredForPackage($className)
+    {
+        foreach ($this->ignores as $ignore) {
+            if (substr($className, 0, strlen($ignore)) === $ignore) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * @param array $ignore
+     */
+    public function ignorePackageHandlingForClassesStartingWith($ignore = array())
+    {
+        if (is_string($ignore)) {
+            $this->ignores = array($ignore);
+        }
+        else {
+            $this->ignores = $ignore;
+        }
     }
 }
