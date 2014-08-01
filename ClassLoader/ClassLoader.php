@@ -86,7 +86,7 @@ class ClassLoader
      */
     protected function classExists($className)
     {
-        return class_exists($className, false);
+        return class_exists($className, false) || interface_exists($className, false);
     }
 
 
