@@ -302,7 +302,7 @@ class ClassLoader
      * @param string $eventName
      * @param array  $eventData
      */
-    private function fire($eventName, array $eventData = array())
+    protected function fire($eventName, array $eventData = array())
     {
         if (isset($this->events[$eventName])) {
             foreach ($this->events[$eventName] as $index => $eventDefinition) {

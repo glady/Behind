@@ -118,9 +118,23 @@ class ClassAndPackageLoader extends ClassLoader
     private function includeStoredPackage($id)
     {
         $packageFilename = $this->getPackageFilename($id);
-        if (file_exists("$this->packageFilePath/$packageFilename")) {
-            include "$this->packageFilePath/$packageFilename";
+        $filename = "$this->packageFilePath/$packageFilename";
+        $state = array(
+            self::LOAD_STATE_LOADED     => false,
+            self::LOAD_STATE_CLASS_NAME => null,
+            self::LOAD_STATE_FILE_NAME  => $filename
+        );
+        $this->fire(self::ON_BEFORE_LOAD, $state);
+
+        if (file_exists($filename)) {
+            $this->fire(self::ON_BEFORE_REQUIRE, $state);
+
+            include $filename;
+
+            $state[self::LOAD_STATE_LOADED] = true;
+            $this->fire(self::ON_AFTER_REQUIRE, $state);
         }
+        $this->fire(self::ON_AFTER_LOAD, $state);
     }
 
 
