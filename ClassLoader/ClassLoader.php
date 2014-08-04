@@ -111,6 +111,7 @@ class ClassLoader
 
     /**
      * @param string $className
+     * @return bool
      */
     public function loadClass($className)
     {
@@ -148,6 +149,8 @@ class ClassLoader
         }
 
         $this->fire(self::ON_AFTER_LOAD, $state);
+
+        return $state[self::LOAD_STATE_LOADED];
     }
 
 
