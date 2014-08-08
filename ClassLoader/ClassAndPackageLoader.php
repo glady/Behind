@@ -31,6 +31,37 @@ class ClassAndPackageLoader extends ClassLoader
     /** @var array */
     protected $ignores = array();
 
+    /** @var bool */
+    protected $isLoadPackageEnabled = true;
+
+    /** @var bool */
+    protected $isSavePackageEnabled = true;
+
+
+    /**
+     * this function enables loading and saving of packages. calling with one argument, both will be toggled, when two
+     *  arguments are given, the first toggles loading and the second toggles saving
+     *
+     * @example setPackagingEnabled(true)         will enable loading and saving of packages
+     * @example setPackagingEnabled(true, true)   will enable loading and saving of packages
+     * @example setPackagingEnabled(false)        will disable loading and saving of packages (behavior of parent class)
+     * @example setPackagingEnabled(false, false) will disable loading and saving of packages (behavior of parent class)
+     * @example setPackagingEnabled(false, true)  will disable loading, but will save package on stopPackage!
+     *                                              `- can be used to regenerate packages
+     * @example setPackagingEnabled(true, false)  will enable loading, but will never save package on stopPackage!
+     *
+     * @param bool $enabled
+     * @param null|bool $saveEnabled
+     */
+    public function setPackagingEnabled($enabled = true, $saveEnabled = null)
+    {
+        if ($saveEnabled === null) {
+            $saveEnabled = $enabled;
+        }
+        $this->isLoadPackageEnabled = $enabled === true;
+        $this->isSavePackageEnabled = $saveEnabled === true;
+    }
+
 
     /**
      * @param string $version
@@ -55,10 +86,10 @@ class ClassAndPackageLoader extends ClassLoader
      */
     public function startPackage($id)
     {
-        if ($this->hasStoredPackage($id)) {
+        if ($this->hasStoredPackage($id) && $this->isLoadPackageEnabled) {
             $this->includeStoredPackage($id);
         }
-        else {
+        else if ($this->isSavePackageEnabled) {
             $this->packages[$id] = array(
                 'active' => true,
                 'classMap' => array()
@@ -93,7 +124,7 @@ class ClassAndPackageLoader extends ClassLoader
      */
     public function stopPackage($id)
     {
-        if ($this->isPackageActive($id)) {
+        if ($this->isSavePackageEnabled && $this->isPackageActive($id)) {
             $this->packages[$id]['active'] = false;
             $this->writeStoredPackage($id);
             $this->un(self::ON_AFTER_LOAD, "package-$id");
