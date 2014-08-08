@@ -142,8 +142,14 @@ class ClassLoader
                     }
                 }
                 else {
-                    $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
-                    $fileName = null;
+                    if ($this->classExists($className)) {
+                        // possibly explicit loaded/defined by callback rule without including a file
+                        $state[self::LOAD_STATE_LOADED] = true;
+                    }
+                    else {
+                        $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
+                        $fileName = null;
+                    }
                 }
             }
         }
