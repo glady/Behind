@@ -86,7 +86,10 @@ class ClassLoader
      */
     protected function classExists($className)
     {
-        return class_exists($className, false) || interface_exists($className, false);
+        return class_exists($className, false) // classes - PHP 4
+            || interface_exists($className, false) // interfaces - PHP_VERSION >= 5.0.2
+            || function_exists('trait_exists') && trait_exists($className, false) // traits - PHP_VERSION >= 5.4
+            || false;
     }
 
 
