@@ -136,7 +136,9 @@ class ClassLoader
                 if ($fileName !== null && $this->fileExists($fileName)) {
                     $this->fire(self::ON_BEFORE_REQUIRE, $state);
 
-                    $this->includeFile($fileName);
+                    if (!$this->classExists($className)) {
+                        $this->includeFile($fileName);
+                    }
 
                     if ($this->classExists($className)) {
                         $this->rememberLoadedClass($className, $fileName);
