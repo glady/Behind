@@ -33,7 +33,7 @@ matrix:
 # - osx        # error: in os section: dropping osx, does not support php
 
 before_script:
- - if [[ "$COVER" == 1 ]]; then composer require codeclimate/php-test-reporter --dev; composer install; fi
+ - if [[ "$COVER" == 1 ]]; then ./tools/prepare_coverage.sh; fi
 
 script:
  - if [[ "$COVER" == 1 ]]; then phpunit --coverage-clover build/logs/clover.xml; else phpunit; fi
