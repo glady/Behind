@@ -3,9 +3,12 @@ Behind
 
 Behind is a php toolbox for environments of your php-application.
 
-UnitTests
----------
-master: [![Buil<d Status](https://travis-ci.org/glady/Behind.png?branch=master)](https://travis-ci.org/glady/Behind)
+UnitTests and Code Analysis
+---------------------------
+master:
+[![Build Status](https://travis-ci.org/glady/Behind.png?branch=master)](https://travis-ci.org/glady/Behind)
+[![Code Climate](https://codeclimate.com/github/glady/Behind/badges/gpa.svg)](https://codeclimate.com/github/glady/Behind)
+[![Test Coverage](https://codeclimate.com/github/glady/Behind/badges/coverage.svg)](https://codeclimate.com/github/glady/Behind)
 
 Milestones
 ----------
