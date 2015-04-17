@@ -34,7 +34,6 @@ class ClassLoader
     /** load state constants */
     const LOAD_STATE_CLASS_NAME     = 'className';
     const LOAD_STATE_FILE_NAME      = 'fileName';
-//    const LOAD_STATE_RULE           = 'rule';
     const LOAD_STATE_LOADED         = 'loaded';
 
     /** Config constants */
@@ -86,8 +85,7 @@ class ClassLoader
     {
         return class_exists($className, false) // classes - PHP 4
             || interface_exists($className, false) // interfaces - PHP_VERSION >= 5.0.2
-            || function_exists('trait_exists') && trait_exists($className, false) // traits - PHP_VERSION >= 5.4
-            || false;
+            || function_exists('trait_exists') && trait_exists($className, false); // traits - PHP_VERSION >= 5.4
     }
 
 
@@ -123,14 +121,12 @@ class ClassLoader
         );
 
         $this->fire(self::ON_BEFORE_LOAD, $state);
-
         if (!$this->classExists($className)) {
             $autoloadRules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
             while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
                 $state = $this->tryToLoadClassByRule($state, $className, $rule);
             }
         }
-
         $this->fire(self::ON_AFTER_LOAD, $state);
 
         return $state[self::LOAD_STATE_LOADED];
@@ -145,58 +141,89 @@ class ClassLoader
     private function getFileNameByRule(array $rule, $className)
     {
         $fileName = null;
-        if (isset($rule['type'])) {
-            switch ($rule['type']) {
-                case 'callback':
-                    $fileName = call_user_func_array($rule['fn'], array($className));
+        $type = $this->getFromArray($rule, 'type');
+        switch ($type) {
+            case 'callback':
+                $fileName = call_user_func_array($rule['fn'], array($className));
+                break;
+
+            case 'map':
+                $classMap = $this->getFromArray($rule, 'classes', array());
+                $baseDir = $this->getFromArray($rule, 'baseDir');
+                $fileName = $this->getFileNameFromClassMap($className, $classMap, $baseDir);
+                break;
+
+            case 'separator':
+            case 'separator-with-subdir-prefix':
+                $separator = $this->getFromArray($rule, 'separator', '\\');
+                $fixed     = $this->getFromArray($rule, 'fixed', array());
+                $root      = $this->getFromArray($rule, 'root', __DIR__);
+
+                $fileName = $this->getFileNameBySeparator($className, $separator, $root, $fixed);
+                if ($type === 'separator') {
                     break;
-
-                case 'map':
-                    $classMap = $rule['classes'];
-                    $baseDir = isset($rule['baseDir']) ? $rule['baseDir'] : null;
-                    $fileName = $this->getFileNameFromClassMap($className, $classMap, $baseDir);
-                    break;
-
-                case 'separator':
-                    $separator = isset($rule['separator']) ? $rule['separator']    : '\\';
-                    $fixed     = isset($rule['fixed'])     ? $rule['fixed']        : array();
-                    $root      = isset($rule['root'])      ? $rule['root']         : __DIR__;
-
-                    if (($fixedNamespace = $this->getFixedNamespace($fixed, $className))) {
-                        $className = substr($className, strlen($fixedNamespace));
-                        $root = $fixed[$fixedNamespace];
-                    }
-
-                    $relativeFileName = str_replace($separator, DIRECTORY_SEPARATOR, $className);
-                    $relativeFileName = ltrim($relativeFileName, DIRECTORY_SEPARATOR);
-                    $fileName = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativeFileName . '.php';
-                    break;
-
-                case 'separator-with-subdir-prefix':
-                    $subDirPrefix = isset($rule['subDirPrefix']) ? $rule['subDirPrefix']  : '_';
-                    unset($rule['subDirPrefix']);
-                    $rule['type'] = 'separator';
-
-                    $separatorFileName = $this->getFileNameByRule($rule, $className);
-
-                    if ($this->isFileNameEmpty($separatorFileName)) {
-                        $lastNamespacePart = substr($className, strrpos($className, '\\') + 1);
-                        $fileName = substr($separatorFileName, 0, -4) . $subDirPrefix . $lastNamespacePart . '.php';
-                    }
-                    else {
-                        $root        = dirname($separatorFileName);
-                        $basename    = basename($separatorFileName);
-                        $newSubDir   = substr($basename, 0, -4); // cut off ".php"
-                        $newBasename = $subDirPrefix . $basename;
-                        $fileName = $root . DIRECTORY_SEPARATOR . $newSubDir . DIRECTORY_SEPARATOR . $newBasename;
-                    }
-                    break;
-            }
+                }
+                $subDirPrefix = $this->getFromArray($rule, 'subDirPrefix', '_');
+                $fileName = $this->applySubDirPrefixToFileName($fileName, $subDirPrefix, $className);
+                break;
         }
+        return $fileName;
+    }
+
+
+    /**
+     * @param string $className
+     * @param string $separator
+     * @param string $root
+     * @param array  $fixed
+     * @return string
+     */
+    private function getFileNameBySeparator($className, $separator, $root, array $fixed = array())
+    {
+        if (($fixedNamespace = $this->getFixedNamespace($fixed, $className))) {
+            $className = substr($className, strlen($fixedNamespace));
+            $root = $fixed[$fixedNamespace];
+        }
+
+        $relativeFileName = str_replace($separator, DIRECTORY_SEPARATOR, $className);
+        $relativeFileName = ltrim($relativeFileName, DIRECTORY_SEPARATOR);
+        $fileName = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativeFileName . '.php';
 
         return $fileName;
     }
 
+
+    /**
+     * @param string $fileName
+     * @param string $subDirPrefix
+     * @param string $className
+     * @return string
+     */
+    private function applySubDirPrefixToFileName($fileName, $subDirPrefix, $className)
+    {
+        $fixedRootPart = DIRECTORY_SEPARATOR . '.php';
+        if (substr($fileName, -5) === $fixedRootPart) { // appears, when class = fixed namespace
+            $namespaceParts = explode('\\', $className);
+            $fixedRootBaseName = $subDirPrefix . array_pop($namespaceParts) . '.php';
+            return str_replace($fixedRootPart, DIRECTORY_SEPARATOR . $fixedRootBaseName, $fileName);
+        }
+        return $this->mapFileNameToSubDirWithPrefix($fileName, $subDirPrefix);
+    }
+
+
+    /**
+     * @param string $separatorFileName
+     * @param string $subDirPrefix
+     * @return string
+     */
+    private function mapFileNameToSubDirWithPrefix($separatorFileName, $subDirPrefix)
+    {
+        $root = dirname($separatorFileName);
+        $basename = basename($separatorFileName);
+        $newSubDir = substr($basename, 0, -4); // cut off ".php"
+        $newBasename = $subDirPrefix . $basename;
+        return $root . DIRECTORY_SEPARATOR . $newSubDir . DIRECTORY_SEPARATOR . $newBasename;
+    }
 
 
     /**
@@ -207,55 +234,38 @@ class ClassLoader
      */
     private function getFileNameFromClassMap($className, $classMap, $baseDir = null)
     {
-        $fileName = null;
-        if (isset($classMap[$className])) {
-            $fileName = $classMap[$className];
-            if ($baseDir) {
-                $fileName = $baseDir . DIRECTORY_SEPARATOR . $fileName;
-            }
+        $fileName = $this->getFromArray($classMap, $className);
+        if ($fileName && $baseDir) {
+            $fileName = $baseDir . DIRECTORY_SEPARATOR . $fileName;
         }
         return $fileName;
     }
 
 
     /**
-     * @param $fixed
-     * @param $className
-     *
+     * @param array  $fixed
+     * @param string $className
      * @return int|null|string
      */
-    private function getFixedNamespace($fixed, $className)
+    private function getFixedNamespace(array $fixed, $className)
     {
-        $longestMatchingClassNamePart = null;
+        $longestNamespace = null;
         $matchingLength = 0;
         foreach ($fixed as $fixedClassNamePart => $fixedDir) {
             $length = strlen($fixedClassNamePart);
             if ($length > $matchingLength && strpos($className, $fixedClassNamePart) === 0) {
                 $matchingLength = $length;
-                $longestMatchingClassNamePart = $fixedClassNamePart;
+                $longestNamespace = $fixedClassNamePart;
             }
         }
-
-        return $longestMatchingClassNamePart;
+        return $longestNamespace;
     }
 
 
     /**
-     * @param $separatorFileName
-     *
-     * @return bool
-     */
-    private function isFileNameEmpty($separatorFileName)
-    {
-        return substr($separatorFileName, -5) === DIRECTORY_SEPARATOR . '.php';
-    }
-
-
-    /**
-     * @param array $state
-     * @param       $className
-     * @param array $rule
-     *
+     * @param array  $state
+     * @param string $className
+     * @param array  $rule
      * @return array
      */
     private function tryToLoadClassByRule(array $state, $className, array $rule)
@@ -277,8 +287,7 @@ class ClassLoader
             }
         }
         else {
-            if ($this->classExists($className)) {
-                // possibly explicit loaded/defined by callback rule without including a file
+            if ($this->classExists($className)) { // possibly explicit defined by callback rule without including a file
                 $state[self::LOAD_STATE_LOADED] = true;
             }
             else {
@@ -315,33 +324,25 @@ class ClassLoader
      */
     public function addEventListener($eventName, $callable, array $options = array(), $name = null)
     {
-
         if ($eventName === self::ON_ALL) {
-            $eventNames = $this->getDefinedEventNames();
-            foreach ($eventNames as $eventName) {
+            foreach ($this->getDefinedEventNames() as $eventName) {
                 $this->addEventListener($eventName, $callable, $options, $name);
             }
             return;
         }
-
-        $overwrite  = isset($options['overwrite'])  && (bool)$options['overwrite'];
-        if ($overwrite === true || !isset($this->events[$eventName])) {
+        if (!isset($this->events[$eventName]) || $this->getFromArray($options, 'overwrite', false) ) {
             $this->events[$eventName] = array();
         }
 
         // dispatching configuration
-        $break      = isset($options['breakEventOnReturnFalse']) && (bool)$options['breakEventOnReturnFalse'];
-
+        $break      = (bool)$this->getFromArray($options, 'breakEventOnReturnFalse', false);
         // how many times this will be called?
-        $single     = isset($options['single'])     && (bool)$options['single'];
-        $count      = $single ? 1 : (isset($options['count']) ? (int)$options['count'] : -1);
-
+        $single     = (bool)$this->getFromArray($options, 'single', false);
+        $count      = $single ? 1 : $this->getFromArray($options, 'count', -1);
         if ($name === null) {
             $name = "auto-indexed-listener-" . $this->autoIndex++;
         }
-
-        // register event internally
-        $this->events[$eventName][$name] = array('count' => $count, 'callable' => $callable, 'break' => $break);
+        $this->events[$eventName][$name] = array('count' => (int)$count, 'callable' => $callable, 'break' => $break);
     }
 
 
@@ -399,17 +400,14 @@ class ClassLoader
 
     //<editor-fold desc="Short-Cut functions for define rules">
     /**
-     * @param array $classMap
+     * @param array  $classMap
+     * @param string $baseDir
      */
     public function addClassMap(array $classMap, $baseDir = null)
     {
         if (!empty($classMap)) {
             $rules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
-            $rules[] = array(
-                'type' => 'map',
-                'classes' => $classMap,
-                'baseDir' => $baseDir
-            );
+            $rules[] = array('type' => 'map', 'classes' => $classMap, 'baseDir' => $baseDir);
             $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
         }
     }
@@ -422,10 +420,7 @@ class ClassLoader
     {
         if (is_callable($fn)) {
             $rules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
-            $rules[] = array(
-                'type' => 'callback',
-                'fn' => $fn
-            );
+            $rules[] = array('type' => 'callback', 'fn' => $fn);
             $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
         }
     }
@@ -473,7 +468,7 @@ class ClassLoader
      */
     protected function getConfig($configName, $default = null)
     {
-        return isset($this->config[$configName]) ? $this->config[$configName] : $default;
+        return $this->getFromArray($this->config, $configName, $default);
     }
 
 
@@ -519,4 +514,20 @@ class ClassLoader
         $this->removeEventListener($eventName, $name);
     }
     //</editor-fold>
+
+
+    /**
+     * Helper function for accessing array keys, that are possible not set.
+     *
+     * @param array      $array
+     * @param string|int $key
+     * @param mixed      $default
+     * @return mixed
+     */
+    private function getFromArray(array $array, $key, $default = null)
+    {
+        return isset($array[$key])
+            ? $array[$key]
+            : $default;
+    }
 }
