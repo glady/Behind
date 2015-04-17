@@ -10,6 +10,7 @@
 
 namespace glady\Behind\ClassLoader;
 
+use ArrayAccess;
 
 /**
  * Class ClassLoader
@@ -46,9 +47,6 @@ class ClassLoader
 
     /** @var callable[] */
     protected $events = array();
-
-    /** @var array */
-    protected $rememberedLoadedClasses = array();
 
     /** @var int */
     protected $autoIndex = 1;
@@ -129,49 +127,13 @@ class ClassLoader
         if (!$this->classExists($className)) {
             $autoloadRules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
             while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
-                $fileName = $this->getFileNameByRule($rule, $className);
-
-                $state[self::LOAD_STATE_FILE_NAME] = $fileName;
-
-                if ($fileName !== null && $this->fileExists($fileName)) {
-                    $this->fire(self::ON_BEFORE_REQUIRE, $state);
-
-                    if (!$this->classExists($className)) {
-                        $this->includeFile($fileName);
-                    }
-
-                    if ($this->classExists($className)) {
-                        $this->rememberLoadedClass($className, $fileName);
-                        $state[self::LOAD_STATE_LOADED] = true;
-                        $this->fire(self::ON_AFTER_REQUIRE, $state);
-                    }
-                }
-                else {
-                    if ($this->classExists($className)) {
-                        // possibly explicit loaded/defined by callback rule without including a file
-                        $state[self::LOAD_STATE_LOADED] = true;
-                    }
-                    else {
-                        $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
-                        $fileName = null;
-                    }
-                }
+                $state = $this->tryToLoadClassByRule($state, $className, $rule);
             }
         }
 
         $this->fire(self::ON_AFTER_LOAD, $state);
 
         return $state[self::LOAD_STATE_LOADED];
-    }
-
-
-    /**
-     * @param string $className
-     * @param string $fileName
-     */
-    private function rememberLoadedClass($className, $fileName)
-    {
-        $this->rememberedLoadedClasses[$className] = $fileName;
     }
 
 
@@ -190,60 +152,141 @@ class ClassLoader
                     break;
 
                 case 'map':
-                    if (isset($rule['classes'][$className])) {
-                        $fileName = $rule['classes'][$className];
-                        if (isset($rule['baseDir'])) {
-                            $fileName = $rule['baseDir'] . DIRECTORY_SEPARATOR . $fileName;
-                        }
-                    }
+                    $classMap = $rule['classes'];
+                    $baseDir = isset($rule['baseDir']) ? $rule['baseDir'] : null;
+                    $fileName = $this->getFileNameFromClassMap($className, $classMap, $baseDir);
                     break;
 
                 case 'separator':
-                    $sep    = isset($rule['separator']) ? $rule['separator']    : '\\';
-                    $fixed  = isset($rule['fixed'])     ? $rule['fixed']        : array();
-                    $root   = isset($rule['root'])      ? $rule['root']         : __DIR__;
+                    $separator = isset($rule['separator']) ? $rule['separator']    : '\\';
+                    $fixed     = isset($rule['fixed'])     ? $rule['fixed']        : array();
+                    $root      = isset($rule['root'])      ? $rule['root']         : __DIR__;
 
-                    $originalClassName = $className;
-                    $matchingLength = 0;
-                    foreach ($fixed as $fixedClassNamePart => $fixedDir) {
-                        $length = strlen($fixedClassNamePart);
-                        if ($length > $matchingLength && strpos($originalClassName, $fixedClassNamePart) === 0) {
-                            $className = substr($originalClassName, $length);
-                            $matchingLength = $length;
-                            $root = $fixedDir;
-                        }
+                    if (($fixedNamespace = $this->getFixedNamespace($fixed, $className))) {
+                        $className = substr($className, strlen($fixedNamespace));
+                        $root = $fixed[$fixedNamespace];
                     }
 
-                    $relativeFileName = str_replace($sep, DIRECTORY_SEPARATOR, $className);
-
-                    $root = rtrim($root, DIRECTORY_SEPARATOR);
+                    $relativeFileName = str_replace($separator, DIRECTORY_SEPARATOR, $className);
                     $relativeFileName = ltrim($relativeFileName, DIRECTORY_SEPARATOR);
-
-                    $fileName = $root . DIRECTORY_SEPARATOR . $relativeFileName . '.php';
+                    $fileName = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $relativeFileName . '.php';
                     break;
 
                 case 'separator-with-subdir-prefix':
                     $subDirPrefix = isset($rule['subDirPrefix']) ? $rule['subDirPrefix']  : '_';
                     unset($rule['subDirPrefix']);
                     $rule['type'] = 'separator';
+
                     $separatorFileName = $this->getFileNameByRule($rule, $className);
-                    if (substr($separatorFileName, -5) === DIRECTORY_SEPARATOR . '.php') {
+
+                    if ($this->isFileNameEmpty($separatorFileName)) {
                         $lastNamespacePart = substr($className, strrpos($className, '\\') + 1);
                         $fileName = substr($separatorFileName, 0, -4) . $subDirPrefix . $lastNamespacePart . '.php';
                     }
                     else {
-                        $filePos = strrpos($separatorFileName, DIRECTORY_SEPARATOR);
-                        if ($filePos !== false) {
-                            $fileName = substr($separatorFileName, 0, $filePos) . DIRECTORY_SEPARATOR
-                                . substr($separatorFileName, $filePos + 1, -4) . DIRECTORY_SEPARATOR
-                                . $subDirPrefix . substr($separatorFileName, $filePos + 1);
-                        }
+                        $root        = dirname($separatorFileName);
+                        $basename    = basename($separatorFileName);
+                        $newSubDir   = substr($basename, 0, -4); // cut off ".php"
+                        $newBasename = $subDirPrefix . $basename;
+                        $fileName = $root . DIRECTORY_SEPARATOR . $newSubDir . DIRECTORY_SEPARATOR . $newBasename;
                     }
                     break;
             }
         }
 
         return $fileName;
+    }
+
+
+
+    /**
+     * @param string            $className
+     * @param ArrayAccess|array $classMap
+     * @param string|null       $baseDir
+     * @return string
+     */
+    private function getFileNameFromClassMap($className, $classMap, $baseDir = null)
+    {
+        $fileName = null;
+        if (isset($classMap[$className])) {
+            $fileName = $classMap[$className];
+            if ($baseDir) {
+                $fileName = $baseDir . DIRECTORY_SEPARATOR . $fileName;
+            }
+        }
+        return $fileName;
+    }
+
+
+    /**
+     * @param $fixed
+     * @param $className
+     *
+     * @return int|null|string
+     */
+    private function getFixedNamespace($fixed, $className)
+    {
+        $longestMatchingClassNamePart = null;
+        $matchingLength = 0;
+        foreach ($fixed as $fixedClassNamePart => $fixedDir) {
+            $length = strlen($fixedClassNamePart);
+            if ($length > $matchingLength && strpos($className, $fixedClassNamePart) === 0) {
+                $matchingLength = $length;
+                $longestMatchingClassNamePart = $fixedClassNamePart;
+            }
+        }
+
+        return $longestMatchingClassNamePart;
+    }
+
+
+    /**
+     * @param $separatorFileName
+     *
+     * @return bool
+     */
+    private function isFileNameEmpty($separatorFileName)
+    {
+        return substr($separatorFileName, -5) === DIRECTORY_SEPARATOR . '.php';
+    }
+
+
+    /**
+     * @param array $state
+     * @param       $className
+     * @param array $rule
+     *
+     * @return array
+     */
+    private function tryToLoadClassByRule(array $state, $className, array $rule)
+    {
+        $fileName = $this->getFileNameByRule($rule, $className);
+
+        $state[self::LOAD_STATE_FILE_NAME] = $fileName;
+
+        if ($fileName !== null && $this->fileExists($fileName)) {
+            $this->fire(self::ON_BEFORE_REQUIRE, $state);
+
+            if (!$this->classExists($className)) {
+                $this->includeFile($fileName);
+            }
+
+            if ($this->classExists($className)) {
+                $state[self::LOAD_STATE_LOADED] = true;
+                $this->fire(self::ON_AFTER_REQUIRE, $state);
+            }
+        }
+        else {
+            if ($this->classExists($className)) {
+                // possibly explicit loaded/defined by callback rule without including a file
+                $state[self::LOAD_STATE_LOADED] = true;
+            }
+            else {
+                $this->fire(self::ON_RULE_DOES_NOT_MATCH, $state);
+                $fileName = null;
+            }
+        }
+        return $state;
     }
     //</editor-fold>
 
