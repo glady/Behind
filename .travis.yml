@@ -15,6 +15,10 @@ env:
 - COVER=0
 
 matrix:
+ allow_failures:
+  # run this coverage build, but allow failure
+  - php: 5.6
+    env: COVER=1
  exclude:
   # skip all cover-build except for "php: 5.6"
   - php: hhvm-nightly
