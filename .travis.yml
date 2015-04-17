@@ -25,7 +25,7 @@ matrix:
     env: COVER=1
   - php: 5.5
     env: COVER=1
-  - php: 5.5
+  - php: 5.5.9
     env: COVER=1
   - php: 5.4
     env: COVER=1
