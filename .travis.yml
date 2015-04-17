@@ -1,15 +1,49 @@
 language: php
 php:
- - hhvm-nightly
- - hhvm
- - nightly
- - 5.6
- - 5.5
- - 5.5.9
- - 5.4
- - 5.3
- - 5.3.3
+- hhvm-nightly
+- hhvm
+- nightly
+- 5.6
+- 5.5
+- 5.5.9
+- 5.4
+- 5.3
+- 5.3.3
 
-os:
- - linux
- - osx
+env:
+- COVER=1
+- COVER=0
+
+matrix:
+ exclude:
+  # skip all cover-build except for "php: 5.6"
+  - php: hhvm-nightly
+    env: COVER=1
+  - php: hhvm
+    env: COVER=1
+  - php: nightly
+    env: COVER=1
+  - php: 5.5
+    env: COVER=1
+  - php: 5.5
+    env: COVER=1
+  - php: 5.4
+    env: COVER=1
+  - php: 5.3
+    env: COVER=1
+  - php: 5.3.3
+    env: COVER=1
+
+# validated with: http://lint.travis-ci.org/
+# os:          # error: your repository must be feature flagged for the os setting to be used
+# - linux
+# - osx        # error: in os section: dropping osx, does not support php
+
+before_script:
+ - if [[ "$COVER" == 1 ]]; then composer require codeclimate/php-test-reporter --dev; composer install; fi
+
+script:
+ - if [[ "$COVER" == 1 ]]; then phpunit --coverage-clover build/logs/clover.xml; else phpunit; fi
+
+after_script:
+ - if [[ "$COVER" == 1 ]]; then CODECLIMATE_REPO_TOKEN="99a93b7c64a586c9207ad11a8da9a7dbc2811936dc13c11bbe71653e0fcd9f53" ./vendor/bin/test-reporter fi
