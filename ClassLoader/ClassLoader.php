@@ -56,13 +56,16 @@ class ClassLoader
     /**
      * @param object $autoLoader - instance of any classLoader class with loading classes within $fn
      * @param string $fn
+     * @return object|ClassLoader
      */
     public static function registerAutoLoader($autoLoader = null, $fn = self::LOAD_FUNCTION)
     {
         if ($autoLoader === null) {
             $autoLoader = new self();
+            $autoLoader->addNamespaceClassLoaderRule(__DIR__);
         }
         spl_autoload_register(array($autoLoader, $fn));
+        return $autoLoader;
     }
 
 
