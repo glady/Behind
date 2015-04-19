@@ -307,7 +307,7 @@ class ClassLoader
     /**
      * @return array
      */
-    public function getDefinedEventNames()
+    protected function getDefinedEventNames()
     {
         return array(
             self::ON_BEFORE_LOAD,

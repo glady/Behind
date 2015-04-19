@@ -1,6 +1,14 @@
 <?php
-namespace glady\Behind\ClassLoader\test;
+/*
+ * This file is part of the Behind-Project (https://github.com/glady/Behind).
+ *
+ * (c) Mike Gladysch <mail@mike-gladysch.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
+namespace glady\Behind\ClassLoader\test;
 
 /**
  * Class ClassLoaderBehaviorTest
@@ -16,6 +24,16 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->givenIHaveNotConfiguredClassLoader();
         $this->whenITryToLoadExistingClass('TestFolder_TestClass');
         $this->thenIShouldNotHaveTriedToLoadAnything();
+    }
+
+
+    public function testRegisteredClassMapRuleClassLoader()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/somewhere/else.php', array('MyClass'));
+        $this->givenIHaveAClassMap_RuleOnDirectory(array('MyClass' => 'else.php'), '/somewhere');
+        $this->whenITryToLoadExistingClass('MyClass');
+        $this->thenIShouldHaveLoadedFile('/somewhere/else.php');
     }
 
 

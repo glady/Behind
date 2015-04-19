@@ -1,10 +1,22 @@
 <?php
+/*
+ * This file is part of the Behind-Project (https://github.com/glady/Behind).
+ *
+ * (c) Mike Gladysch <mail@mike-gladysch.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 namespace glady\Behind\ClassLoader\test;
 
 use glady\Behind\ClassLoader\ClassLoader;
 use glady\Behind\TestFramework\UnitTest\TestCase;
 
+/**
+ * Class ClassLoaderBehavior
+ * @package glady\Behind\ClassLoader\test
+ */
 abstract class ClassLoaderBehavior extends TestCase
 {
     /** @var string */
@@ -42,6 +54,14 @@ abstract class ClassLoaderBehavior extends TestCase
         $directory = $this->makePathOsDependentValid($directory);
         $this->numberOfRules++;
         $this->classLoader->addSeparatorClassLoaderRule($directory, $separator);
+    }
+
+
+    protected function givenIHaveAClassMap_RuleOnDirectory($classMap, $directory)
+    {
+        $directory = $this->makePathOsDependentValid($directory);
+        $this->numberOfRules++;
+        $this->classLoader->addClassMap($classMap, $directory);
     }
 
 
