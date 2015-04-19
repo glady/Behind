@@ -231,10 +231,10 @@ class ClassAndPackageLoader extends ClassLoader
      */
     public function normalizeNamespaceForPackage(array $phpCodeLines, $className, $fileName)
     {
-        $ns = 'namespace';
-        $nsLength = strlen($ns);
-        $hasNs = false;
-        $closeNs = false;
+        $namespace = 'namespace';
+        $namespaceLength = strlen($namespace);
+        $hasNamespace = false;
+        $closeNamespace = false;
         $lastUseIndex = null;
         foreach ($phpCodeLines as $i => $line) {
             $trimmedLine = trim($line);
@@ -244,14 +244,14 @@ class ClassAndPackageLoader extends ClassLoader
                 continue;
             }
             // rebuild namespace with ; to namespace with {}
-            if (substr($trimmedLine, 0, $nsLength) === $ns) {
-                $hasNs = true;
+            if (substr($trimmedLine, 0, $namespaceLength) === $namespace) {
+                $hasNamespace = true;
                 // if not the "namespace xyz;" notation is used, the file itself does the right formatting!
                 // when used: rebuild with {}
                 if (substr($trimmedLine, -1) === ';') {
                     // information: use CAN be placed within {}!
                     $phpCodeLines[$i] = substr($trimmedLine, 0, -1) . '{';
-                    $closeNs = true;
+                    $closeNamespace = true;
                 }
                 $lastUseIndex = $i;
             }
@@ -270,19 +270,19 @@ class ClassAndPackageLoader extends ClassLoader
             $phpCodeLines[$lastUseIndex] .= "\n" . $classCheck;
         }
 
-        if (!$hasNs) {
+        if (!$hasNamespace) {
             $package .= "namespace {\n";
             if ($lastUseIndex === null) {
                 $package .= "$classCheck\n";
             }
-            $closeNs = true;
+            $closeNamespace = true;
         }
         $package .= implode("\n", $phpCodeLines) . "\n";
 
         // attention: the "order" of the closing brackets is irrelevant! we have only to match the number of opened brackets
         // close class check
         $package .= "}\n";
-        if ($closeNs) {
+        if ($closeNamespace) {
             // close namespace
             $package .= "}\n";
         }
