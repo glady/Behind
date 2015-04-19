@@ -85,4 +85,24 @@ class ClassLoaderTest extends TestCase
         );
     }
 
+
+    public function testEvents()
+    {
+        $me = $this;
+        $classLoader = new ClassLoader();
+        $calledEvents = array();
+        $classLoader->on($classLoader::ON_ALL,
+            function ($loader, $eventName, $eventData) use ($me, $classLoader, &$calledEvents)
+            {
+                $me->assertInstanceOf('\glady\Behind\ClassLoader\ClassLoader', $loader);
+                $me->assertSame($classLoader, $loader);
+                $me->assertTrue(is_string($eventName));
+                $me->assertTrue(is_array($eventData));
+                $calledEvents[] = $eventName;
+            }
+        );
+        $classLoader->loadClass('SomeClass');
+        $this->assertSame(array($classLoader::ON_BEFORE_LOAD, $classLoader::ON_AFTER_LOAD), $calledEvents);
+        // TODO: add test for remaining events too
+    }
 }
