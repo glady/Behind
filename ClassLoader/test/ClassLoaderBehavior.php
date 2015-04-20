@@ -130,7 +130,13 @@ abstract class ClassLoaderBehavior extends TestCase
     }
 
 
-    protected function thenIShouldNotHaveTriedToLoadAnything()
+    protected function thenIShouldNotHaveTriedToLoadAnythingButClassIsLoaded()
+    {
+        $this->thenIShouldNotHaveTriedToLoadAnything(true);
+    }
+
+
+    protected function thenIShouldNotHaveTriedToLoadAnything($expectedClassLoaded = false)
     {
         $eventsFired = $this->classLoader->_eventsFired;
 
@@ -143,7 +149,9 @@ abstract class ClassLoaderBehavior extends TestCase
         // before load and after load should be filled, exactly ONE event with $state!
         $this->assertArrayHasKey(ClassLoader::ON_BEFORE_LOAD, $eventsFired);
         $this->assertEquals(array($state), $eventsFired[ClassLoader::ON_BEFORE_LOAD]);
+
         $this->assertArrayHasKey(ClassLoader::ON_AFTER_LOAD, $eventsFired);
+        $state[ClassLoader::LOAD_STATE_LOADED] = $expectedClassLoaded;
         $this->assertEquals(array($state), $eventsFired[ClassLoader::ON_AFTER_LOAD]);
 
         // but no other event should be fired
@@ -193,10 +201,31 @@ abstract class ClassLoaderBehavior extends TestCase
      * @param $file
      * @return mixed
      */
-    private function makePathOsDependentValid($file)
+    public function makePathOsDependentValid($file)
     {
         $file = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $file);
         return $file;
+    }
+
+
+    protected function givenIHaveACallback_Rule($callback)
+    {
+        $this->classLoader->addCallbackRule($callback);
+    }
+
+
+    protected function thenEvent_OccursWithFile($eventName, $file)
+    {
+        $me = $this;
+        $this->classLoader->on($eventName, function (ClassLoader $classLoader, $eventName, $state) use ($me, $file) {
+            $me->assertEquals($file, $state[$classLoader::LOAD_STATE_FILE_NAME]);
+        }, array('single' => true));
+    }
+
+
+    public function givenClass_IsLoaded($className)
+    {
+        $this->classLoader->loadedClasses[] = $className;
     }
 }
 

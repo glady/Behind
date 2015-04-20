@@ -10,6 +10,8 @@
 
 namespace glady\Behind\ClassLoader\test;
 
+use glady\Behind\ClassLoader\ClassLoader;
+
 /**
  * Class ClassLoaderBehaviorTest
  * @package glady\Behind\ClassLoader\test
@@ -34,6 +36,46 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->givenIHaveAClassMap_RuleOnDirectory(array('MyClass' => 'else.php'), '/somewhere');
         $this->whenITryToLoadExistingClass('MyClass');
         $this->thenIShouldHaveLoadedFile('/somewhere/else.php');
+    }
+
+
+    public function testRegisteredCallbackRuleClassLoaderDoesNotLoadClass()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/somewhere/else.php', array('MyClass'));
+        $this->givenIHaveACallback_Rule(function () {
+            return '/some/invalid/file.php';
+        });
+        $this->thenEvent_OccursWithFile(ClassLoader::ON_RULE_DOES_NOT_MATCH, '/some/invalid/file.php');
+        $this->whenITryToLoadExistingClass('MyClass');
+
+    }
+
+
+    public function testRegisteredCallbackRuleClassLoaderDoesReturnFile()
+    {
+        $me = $this;
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/somewhere/else.php', array('MyClass'));
+        $this->givenIHaveACallback_Rule(function () use ($me) {
+            return $me->makePathOsDependentValid('/somewhere/else.php');
+        });
+        $this->whenITryToLoadExistingClass('MyClass');
+        $this->thenIShouldHaveLoadedFile('/somewhere/else.php');
+    }
+
+
+    public function testRegisteredCallbackRuleClassLoaderDoesLoadClass()
+    {
+        $me = $this;
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/somewhere/else.php', array('MyClass'));
+        $this->givenIHaveACallback_Rule(function () use ($me) {
+            $me->givenClass_IsLoaded('MyClass');
+            return null;
+        });
+        $this->whenITryToLoadExistingClass('MyClass');
+        $this->thenIShouldNotHaveTriedToLoadAnythingButClassIsLoaded();
     }
 
 
@@ -164,5 +206,4 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->whenITryToLoadExistingClass('glady\BehindTest\MyLittleTest');
         $this->thenIShouldHaveLoadedFile('/test/MyLittleTest/_MyLittleTest.php');
     }
-
 }
