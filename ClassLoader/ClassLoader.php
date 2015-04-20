@@ -481,12 +481,7 @@ class ClassLoader
      */
     protected function setConfig($configName, $value)
     {
-        if ($value === null) {
-            unset($this->config[$configName]);
-        }
-        else {
-            $this->config[$configName] = $value;
-        }
+        $this->config[$configName] = $value;
     }
     //</editor-fold>
 

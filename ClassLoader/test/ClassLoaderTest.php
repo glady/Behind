@@ -8,7 +8,7 @@
  * file that was distributed with this source code.
  */
 
-namespace glady\Behind\ClassLoader\test;
+namespace glady\Behind\ClassLoader\test {
 
 use glady\Behind\ClassLoader\ClassLoader;
 use glady\Behind\TestFramework\UnitTest\Helper\Reflection;
@@ -25,6 +25,7 @@ class ClassLoaderTest extends TestCase
 
     /**
      * @dataProvider provideFileExists
+     *
      * @param string $file
      * @param bool   $expected
      */
@@ -52,6 +53,7 @@ class ClassLoaderTest extends TestCase
 
     /**
      * @dataProvider provideClassExists
+     *
      * @param string $className
      * @param bool   $expected
      */
@@ -75,6 +77,7 @@ class ClassLoaderTest extends TestCase
         if ($traitsSupported) {
             eval("interface MyTestTrait {}");
         }
+
         return array(
             array(__CLASS__, true),
             array(__CLASS__ . '2', false),
@@ -92,8 +95,7 @@ class ClassLoaderTest extends TestCase
         $classLoader = new ClassLoader();
         $calledEvents = array();
         $classLoader->on($classLoader::ON_ALL,
-            function ($loader, $eventName, $eventData) use ($me, $classLoader, &$calledEvents)
-            {
+            function ($loader, $eventName, $eventData) use ($me, $classLoader, &$calledEvents) {
                 $me->assertInstanceOf('\glady\Behind\ClassLoader\ClassLoader', $loader);
                 $me->assertSame($classLoader, $loader);
                 $me->assertTrue(is_string($eventName));
@@ -105,4 +107,65 @@ class ClassLoaderTest extends TestCase
         $this->assertSame(array($classLoader::ON_BEFORE_LOAD, $classLoader::ON_AFTER_LOAD), $calledEvents);
         // TODO: add test for remaining events too
     }
+
+
+    public function testRegister()
+    {
+        global $registered;
+        $registered = array();
+
+        $this->assertCount(0, $registered);
+        $classLoader = ClassLoader::registerAutoLoader();
+        $this->assertCount(1, $registered);
+        $this->assertSame($classLoader, $registered[0][0]);
+        $this->assertSame('loadClass', $registered[0][1]);
+    }
+
+
+    public function testRegisterInstance()
+    {
+        global $registered;
+        $registered = array();
+
+        $classLoader = new ClassLoader();
+        $this->assertCount(0, $registered);
+
+        $return = ClassLoader::registerAutoLoader($classLoader);
+        $this->assertSame($classLoader, $return);
+
+        $this->assertCount(1, $registered);
+        $this->assertSame($classLoader, $registered[0][0]);
+        $this->assertSame('loadClass', $registered[0][1]);
+    }
+
+
+    public function testRegisterOnInstance()
+    {
+        global $registered;
+        $registered = array();
+
+        $classLoader = new ClassLoader();
+        $this->assertCount(0, $registered);
+
+        $classLoader->register();
+
+        $this->assertCount(1, $registered);
+        $this->assertSame($classLoader, $registered[0][0]);
+        $this->assertSame('loadClass', $registered[0][1]);
+    }
+} // end of test class
+
+} // end of namespace
+
+// mocking autoload register function:
+namespace {
+    $registered = array();
 }
+namespace glady\Behind\ClassLoader {
+    function spl_autoload_register($callable)
+    {
+        global $registered;
+        $registered[] = $callable;
+    }
+}
+
