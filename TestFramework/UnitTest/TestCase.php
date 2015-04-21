@@ -16,7 +16,7 @@ namespace glady\Behind\TestFramework\UnitTest;
  */
 abstract class TestCase extends \PHPUnit_Framework_TestCase
 {
-
+    protected $tearDownSteps = array();
     /** @var string */
     protected $className = null;
 
@@ -30,4 +30,21 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             $this->assertTrue(class_exists($this->className));
         }
     }
+
+
+    protected function onTearDown($callable, array $args = array())
+    {
+        $this->tearDownSteps[] = array('callable' => $callable, 'args' => $args);
+    }
+
+
+    protected function tearDown()
+    {
+        foreach ($this->tearDownSteps as $step) {
+            call_user_func_array($step['callable'], $step['args']);
+        }
+        parent::tearDown();
+    }
+
+
 }

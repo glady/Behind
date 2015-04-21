@@ -8,9 +8,10 @@
  * file that was distributed with this source code.
  */
 
-namespace glady\Behind\ClassLoader\test {
+namespace glady\Behind\ClassLoader\test;
 
 use glady\Behind\ClassLoader\ClassLoader;
+use glady\Behind\TestFramework\UnitTest\Helper\Mocker;
 use glady\Behind\TestFramework\UnitTest\Helper\Reflection;
 use glady\Behind\TestFramework\UnitTest\TestCase;
 
@@ -111,8 +112,8 @@ class ClassLoaderTest extends TestCase
 
     public function testRegister()
     {
-        global $registered;
         $registered = array();
+        $this->mockSplAutoloadRegister($registered);
 
         $this->assertCount(0, $registered);
         $classLoader = ClassLoader::registerAutoLoader();
@@ -124,8 +125,8 @@ class ClassLoaderTest extends TestCase
 
     public function testRegisterInstance()
     {
-        global $registered;
         $registered = array();
+        $this->mockSplAutoloadRegister($registered);
 
         $classLoader = new ClassLoader();
         $this->assertCount(0, $registered);
@@ -141,8 +142,8 @@ class ClassLoaderTest extends TestCase
 
     public function testRegisterOnInstance()
     {
-        global $registered;
         $registered = array();
+        $this->mockSplAutoloadRegister($registered);
 
         $classLoader = new ClassLoader();
         $this->assertCount(0, $registered);
@@ -153,19 +154,39 @@ class ClassLoaderTest extends TestCase
         $this->assertSame($classLoader, $registered[0][0]);
         $this->assertSame('loadClass', $registered[0][1]);
     }
-} // end of test class
 
-} // end of namespace
 
-// mocking autoload register function:
-namespace {
-    $registered = array();
-}
-namespace glady\Behind\ClassLoader {
-    function spl_autoload_register($callable)
+    /**
+     * @param array &$registered - reference of an array for remembering registered callables
+     * @throws \Exception
+     */
+    private function mockSplAutoloadRegister(array &$registered)
     {
-        global $registered;
-        $registered[] = $callable;
+        $mocker = new Mocker();
+        $mocker->mockGlobalFunctionForNamespace(
+            'spl_autoload_register',
+            'glady\Behind\ClassLoader',
+            function ($callable) use (&$registered) {
+                $registered[] = $callable;
+            }
+        );
+
+        // register cleanup
+        $this->onTearDown(
+            array($mocker, 'removeMockOfGlobalFunctionForNamespace'),
+            array('spl_autoload_register', 'glady\Behind\ClassLoader')
+        );
+
+        // register check for cleanup
+        $me = $this;
+        $this->onTearDown(
+            function() use ($mocker, $me) {
+                // validate that remove was successful
+                $me->assertFalse($mocker->isGlobalFunctionMockedForNamespace(
+                    'spl_autoload_register',
+                    'glady\Behind\ClassLoader'
+                ), 'Global function is still mocked!');
+            }
+        );
     }
 }
-
