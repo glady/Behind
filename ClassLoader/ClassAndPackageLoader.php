@@ -99,9 +99,9 @@ class ClassAndPackageLoader extends ClassLoader
                 if ($eventData[ClassLoader::LOAD_STATE_LOADED] === true) {
                     $className = $eventData[ClassLoader::LOAD_STATE_CLASS_NAME];
                     $fileName = $eventData[ClassLoader::LOAD_STATE_FILE_NAME];
-                    $me->addClassToPackage($id, $className, $fileName, "package-$id");
+                    $me->addClassToPackage($id, $className, $fileName);
                 }
-            });
+            }, array(), "package-$id");
         }
     }
 
@@ -199,8 +199,7 @@ class ClassAndPackageLoader extends ClassLoader
             . $meta;
 
         $packageFilename = $this->getPackageFilename($id);
-        file_put_contents("$this->packageFilePath/$packageFilename.meta", substr($meta, 0, -1) . "\n }\n}");
-        file_put_contents("$this->packageFilePath/$packageFilename", $package);
+        $this->writeToFile($packageFilename, $meta, $package);
     }
 
 
@@ -219,7 +218,8 @@ class ClassAndPackageLoader extends ClassLoader
      */
     private function isPackageActive($id)
     {
-        return isset($this->packages[$id]['active']) && $this->packages[$id]['active'] === true;
+        return isset($this->packages[$id]['active'])
+            && $this->packages[$id]['active'] === true;
     }
 
 
@@ -261,35 +261,9 @@ class ClassAndPackageLoader extends ClassLoader
             }
         }
 
-        $classCheck = "if (!class_exists('$className', false)) {";
-
-        $package = "//start of file: '$fileName'\n";
-
-        if ($lastUseIndex !== null) {
-            // there was an use or a namespace line -> append check as new line ofter that
-            $phpCodeLines[$lastUseIndex] .= "\n" . $classCheck;
-        }
-
-        if (!$hasNamespace) {
-            $package .= "namespace {\n";
-            if ($lastUseIndex === null) {
-                $package .= "$classCheck\n";
-            }
-            $closeNamespace = true;
-        }
-        $package .= implode("\n", $phpCodeLines) . "\n";
-
-        // attention: the "order" of the closing brackets is irrelevant! we have only to match the number of opened brackets
-        // close class check
-        $package .= "}\n";
-        if ($closeNamespace) {
-            // close namespace
-            $package .= "}\n";
-        }
-
-        $package .= "//end of file: '$fileName'\n";
-
-        return $package;
+        return "//start of file: '$fileName'\n"
+            . $this->buildPackagePart($phpCodeLines, $className, $hasNamespace, $lastUseIndex, $closeNamespace)
+            . "//end of file: '$fileName'\n";
     }
 
 
@@ -319,5 +293,66 @@ class ClassAndPackageLoader extends ClassLoader
         else {
             $this->ignores = $ignore;
         }
+    }
+
+
+    /**
+     * @param array  $phpCodeLines
+     * @param string $className
+     * @param bool   $hasNamespace
+     * @param int    $lastUseIndex
+     * @param bool   $closeNamespace
+     * @return string
+     */
+    private function buildPackagePart(array $phpCodeLines, $className, $hasNamespace, $lastUseIndex, $closeNamespace)
+    {
+        $closingBrackets = (int)$closeNamespace;
+        $package = "";
+
+        if (!$hasNamespace) {
+            $package .= "namespace {\n";
+            $closingBrackets++; // closing namespace
+        }
+
+        $closingBrackets++; // closing if class exists
+        $this->addClassCheck($className, $package, $phpCodeLines, $lastUseIndex);
+
+        $package .= implode("\n", $phpCodeLines) . "\n";
+
+        // attention: the "order" of the closing brackets is irrelevant!
+        // -> we have only to match the number of opened brackets
+        $package .= str_repeat("}\n", $closingBrackets);
+        return $package;
+    }
+
+
+    /**
+     * @param       $className
+     * @param       $package
+     * @param array $phpCodeLines
+     * @param       $lastUseIndex
+     */
+    private function addClassCheck($className, &$package, array &$phpCodeLines, $lastUseIndex)
+    {
+        $classCheck = "if (!class_exists('$className', false)) {";
+        if ($lastUseIndex === null) {
+            $package .= "$classCheck\n";
+        }
+        else {
+            // there was an use or a namespace line -> append check as new line after that
+            $phpCodeLines[$lastUseIndex] .= "\n$classCheck";
+        }
+    }
+
+
+    /**
+     * @param $packageFilename
+     * @param $meta
+     * @param $package
+     */
+    protected function writeToFile($packageFilename, $meta, $package)
+    {
+        file_put_contents("$this->packageFilePath/$packageFilename.meta", substr($meta, 0, -1) . "\n }\n}");
+        file_put_contents("$this->packageFilePath/$packageFilename", $package);
     }
 }

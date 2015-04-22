@@ -22,16 +22,11 @@ use glady\Behind\TestFramework\UnitTest\TestCase;
  */
 class ClassAndPackageLoaderTest extends TestCase
 {
+    protected $className = '\glady\Behind\ClassLoader\ClassAndPackageLoader';
 
     const FILENAME = '/testfolder/test.php';
     const CLASSNAME = 'TestClass';
     const TESTNAMESPACE = 'TestNamespace';
-
-
-    public function testClassExists()
-    {
-        $this->assertTrue(class_exists('\glady\Behind\ClassLoader\ClassAndPackageLoader', false));
-    }
 
 
     /**
@@ -47,9 +42,7 @@ class ClassAndPackageLoaderTest extends TestCase
         }
 
         $loader = new ClassAndPackageLoader();
-
         $actualPackageCode = $loader->normalizeNamespaceForPackage($codeBefore, self::CLASSNAME, self::FILENAME);
-
         $this->assertEquals($expectedPackageCode, $actualPackageCode);
     }
 
@@ -110,7 +103,48 @@ class ClassAndPackageLoaderTest extends TestCase
         $testCases[] = array($class3, $expectedPackageForClass3AndClass4);
         $testCases[] = array($class4, $expectedPackageForClass3AndClass4);
 
+        // duplicate all cases with <?php line
+        $ln = count($testCases);
+        for ($i = 0; $i < $ln; $i++) {
+            $testCase = $testCases[$i];
+            $testCase[0] = "<?php\n" . $testCase[0];
+            $testCases[] = $testCase;
+        }
+
         return $testCases;
     }
 
+
+    public function testPackagingOnInvalidFilesThrowsNoErrors()
+    {
+        $e = null;
+        try {
+            $packageLoader = $this->getMockedPackageLoader();
+            $packageLoader->ignorePackageHandlingForClassesStartingWith('\\glady\\Behind');
+            $packageLoader->startPackage('myPackage');
+            $packageLoader->loadClass('\\glady\\Behind\\SomeClass');
+            $packageLoader->loadClass('\\glady\\Behind\\ClassLoader\\ClassLoader');
+            $packageLoader->stopPackage('myPackage');
+            // TODO: find something for asserting / make asserting possible - some tests with valid data needed?
+        }
+        catch (\Exception $e) {
+            // assert below
+        }
+        $this->assertNull($e);
+    }
+
+
+    /**
+     * @return ClassAndPackageLoader
+     */
+    protected function getMockedPackageLoader()
+    {
+        /** @var ClassAndPackageLoader $packageLoader */
+        $packageLoader = $this->getMock($this->className, array('writeToFile'));
+        $packageLoader
+            ->expects($this->any())
+            ->method('writeToFile')->will($this->returnValue(null));
+
+        return $packageLoader;
+    }
 }
