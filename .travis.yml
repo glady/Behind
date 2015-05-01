@@ -26,6 +26,7 @@ matrix:
   # run this coverage build, but allow failure
   - php: 5.6
     env: COVER=1
+  - php: hhvm-nightly # currently not supported by travis (no nightly bilds on precise)
 
 # validated with: http://lint.travis-ci.org/
 # os:          # error: your repository must be feature flagged for the os setting to be used
