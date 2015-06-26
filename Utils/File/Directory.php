@@ -18,6 +18,7 @@ use SplFileInfo;
  */
 class Directory
 {
+    /** @var SplFileInfo */
     private $fileInfo = null;
 
 
@@ -39,6 +40,9 @@ class Directory
     }
 
 
+    /**
+     * @return string
+     */
     public function getRealPath()
     {
         return $this->fileInfo->getRealPath();

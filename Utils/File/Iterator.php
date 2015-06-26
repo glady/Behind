@@ -19,10 +19,17 @@ use RecursiveIteratorIterator;
  */
 class Iterator
 {
+    /** @var string */
     private $path = __DIR__;
+
+    /** @var int */
     private $mode = RecursiveIteratorIterator::CHILD_FIRST;
 
 
+    /**
+     * @param string $path
+     * @param int    $mode
+     */
     public function __construct($path, $mode = RecursiveIteratorIterator::CHILD_FIRST)
     {
         $this->path = $path;
@@ -30,6 +37,9 @@ class Iterator
     }
 
 
+    /**
+     * @param callable $callable
+     */
     public function forEachFile($callable)
     {
         foreach ($this->getIterator() as $fileInfo) {
@@ -43,6 +53,9 @@ class Iterator
     }
 
 
+    /**
+     * @param callable $callable
+     */
     public function forEachDirectory($callable)
     {
         foreach ($this->getIterator() as $fileInfo) {
@@ -56,6 +69,9 @@ class Iterator
     }
 
 
+    /**
+     * @return RecursiveIteratorIterator
+     */
     private function getIterator()
     {
         return new RecursiveIteratorIterator(

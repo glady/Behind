@@ -18,6 +18,7 @@ use SplFileObject;
  */
 class File
 {
+    /** @var SplFileObject */
     private $fileObject = null;
 
 
@@ -30,6 +31,9 @@ class File
     }
 
 
+    /**
+     * @return string
+     */
     public function getContent()
     {
         $this->fileObject->rewind();
@@ -43,6 +47,9 @@ class File
     }
 
 
+    /**
+     * @return string
+     */
     public function getRealPath()
     {
         return $this->fileObject->getRealPath();

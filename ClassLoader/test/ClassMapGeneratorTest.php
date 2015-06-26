@@ -73,6 +73,10 @@ class ClassMapGeneratorTest extends TestCase
     }
 
 
+    /**
+     * @param string $className
+     * @return string
+     */
     private function buildClassCode($className)
     {
         return "<?php\nclass $className\n{}";

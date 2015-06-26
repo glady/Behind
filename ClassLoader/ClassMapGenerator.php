@@ -26,6 +26,9 @@ class ClassMapGenerator
     private $acceptMultipleClassesPerFile = false;
 
 
+    /**
+     * @return array
+     */
     public function generate()
     {
         $map = array();
@@ -49,12 +52,19 @@ class ClassMapGenerator
     }
 
 
+    /**
+     * @param string $path
+     */
     public function addPath($path)
     {
         $this->paths[] = $path;
     }
 
 
+    /**
+     * @param int $token
+     * @return bool
+     */
     public function isTokenClass($token)
     {
         return $token === T_CLASS
