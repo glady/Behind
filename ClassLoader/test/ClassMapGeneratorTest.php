@@ -38,6 +38,9 @@ class ClassMapGeneratorTest extends TestCase
         if (is_dir($fixturePath)) {
             $this->cleanUpPathRecursive($fixturePath);
         }
+        else {
+            mkdir($fixturePath, 0777, true);
+        }
         $this->addFileToPath($fixturePath, 'A.php', $this->buildClassCode('A'));
         $this->addFileToPath($fixturePath, 'B.php', $this->buildClassCode('B'));
         $this->addFileToPath($fixturePath, 'X.php', $this->buildClassCode('C'));
