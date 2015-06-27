@@ -102,8 +102,8 @@ class ClassMapGeneratorTest extends TestCase
 
     private function addFileToPath($path, $filename, $code)
     {
-        if (!is_dir(&$path)) {
-            mkdir(&$path, 0777, true);
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
         }
         file_put_contents("$path/$filename", $code);
     }
