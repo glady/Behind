@@ -48,6 +48,7 @@ class ClassMapGeneratorTest extends TestCase
         $this->addFileToPath($fixturePath, 'A.php', $this->buildClassCode('A'));
         $this->addFileToPath($fixturePath, 'B.php', $this->buildClassCode('B'));
         $this->addFileToPath($fixturePath, 'X.php', $this->buildClassCode('C'));
+        $this->addFileToPath($fixturePath, 'NamespacedA.php', $this->buildClassCode('A', 'MyNamespace'));
         $this->addFileToPath($fixturePath, 'Trait.php', $this->buildTraitCode('MyTrait'));
         $this->addFileToPath($fixturePath . '/subfolder', 'X.php', $this->buildAbstractClassCode('X'));
         $this->addFileToPath($fixturePath . '/subfolder', 'AA.php', $this->buildInterfaceCode('AA'));
@@ -60,6 +61,7 @@ class ClassMapGeneratorTest extends TestCase
             'AA' => realpath($fixturePath . '/subfolder/AA.php'),
             'B' => realpath($fixturePath . '/B.php'),
             'C' => realpath($fixturePath . '/X.php'),
+            'MyNamespace\A' => realpath($fixturePath . '/NamespacedA.php'),
             'MyTrait' => realpath($fixturePath . '/Trait.php'),
             'X' => realpath($fixturePath . '/subfolder/X.php'),
         );
@@ -134,38 +136,47 @@ class ClassMapGeneratorTest extends TestCase
 
     /**
      * @param string $className
+     * @param string $namespace
+     * @param string $obejct
      * @return string
      */
-    private function buildClassCode($className)
+    private function buildClassCode($className, $namespace = '', $obejct = 'class')
     {
-        return "<?php\nclass $className\n{}";
+        $opening = $this->getOpeningCode($namespace);
+        return "$opening\n$obejct $className\n{}";
     }
+
 
     /**
      * @param string $className
+     * @param string $namespace
      * @return string
      */
-    private function buildAbstractClassCode($className)
+    private function buildAbstractClassCode($className, $namespace = '')
     {
-        return "<?php\nabstract class $className\n{}";
+        return $this->buildClassCode($className, $namespace, 'abstract class');
     }
+
 
     /**
      * @param string $className
+     * @param string $namespace
      * @return string
      */
-    private function buildInterfaceCode($className)
+    private function buildInterfaceCode($className, $namespace = '')
     {
-        return "<?php\ninterface $className\n{}";
+        return $this->buildClassCode($className, $namespace, 'interface');
     }
+
 
     /**
      * @param string $className
+     * @param string $namespace
      * @return string
      */
-    private function buildTraitCode($className)
+    private function buildTraitCode($className, $namespace = '')
     {
-        return "<?php\trait $className\n{}";
+        return $this->buildClassCode($className, $namespace, 'trait');
     }
 
 
@@ -182,5 +193,16 @@ class ClassMapGeneratorTest extends TestCase
             mkdir($fixturePath, 0777, true);
         }
         return $fixturePath;
+    }
+
+
+    /**
+     * @param string $namespace
+     * @return string
+     */
+    private function getOpeningCode($namespace = '')
+    {
+        return "<?php"
+            . ($namespace ? "\nnamespace $namespace;" : '');
     }
 }

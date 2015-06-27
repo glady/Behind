@@ -38,9 +38,16 @@ class ClassMapGenerator
             $fileIterator->forEachFile(function(File $file) use ($me, &$map) {
                 $phpCode = $file->getContent();
                 $tokens = token_get_all($phpCode);
+                $namespace = '';
                 foreach ($tokens as $i => $token) {
+                    if ($me->isTokenNamespace($token[0])) {
+                        $namespace = $tokens[$i + 2][1];
+                    }
                     if ($me->isTokenClass($token[0])) {
                         $class = $tokens[$i + 2][1];
+                        if ($namespace) {
+                            $class = "$namespace\\$class";
+                        }
                         $map[$class] = $file->getRealPath();
                         if (!$me->acceptsMultipleClassesPerFile()) {
                             return;
@@ -76,6 +83,16 @@ class ClassMapGenerator
 
 
     /**
+     * @param int $token
+     * @return bool
+     */
+    public function isTokenNamespace($token)
+    {
+        return $token === T_NAMESPACE;
+    }
+
+
+    /**
      * @return bool
      */
     public function acceptsMultipleClassesPerFile()
@@ -91,4 +108,5 @@ class ClassMapGenerator
     {
         $this->acceptMultipleClassesPerFile = $acceptMultipleClassesPerFile === true;
     }
+
 }
