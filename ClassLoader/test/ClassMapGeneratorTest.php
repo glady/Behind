@@ -12,6 +12,7 @@ namespace glady\Behind\ClassLoader\test;
 
 use glady\Behind\ClassLoader\ClassMapGenerator;
 use glady\Behind\TestFramework\UnitTest\TestCase;
+use glady\Behind\Utils\File\Directory;
 use glady\Behind\Utils\File\File;
 use glady\Behind\Utils\File\Iterator;
 
@@ -22,6 +23,16 @@ use glady\Behind\Utils\File\Iterator;
 class ClassMapGeneratorTest extends TestCase
 {
     protected $className = '\glady\Behind\ClassLoader\ClassMapGenerator';
+
+
+    public static function tearDownAfterClass()
+    {
+        $fixturePath = __DIR__ . '/fixture';
+        if (is_dir($fixturePath)) {
+            self::cleanUpPathRecursive($fixturePath);
+        }
+        parent::tearDownAfterClass();
+    }
 
 
     public function testEmpty()
@@ -85,18 +96,29 @@ class ClassMapGeneratorTest extends TestCase
     }
 
 
-    private function cleanUpPathRecursive($path)
+    private static function cleanUpPathRecursive($path)
     {
         $cleanup = array();
         $files = new Iterator($path);
 
-        $files->forEachFile(function(File $fileOrDir) use (&$cleanup) {
-            $realPath = $fileOrDir->getRealPath();
+        $files->forEachFile(function(File $file) use (&$cleanup) {
+            $realPath = $file->getRealPath();
             $cleanup[] = $realPath;
         });
         foreach ($cleanup as $realPath) {
             unlink($realPath);
         }
+
+        $cleanup = array();
+        $files->forEachDirectory(function(Directory $dir) use (&$cleanup) {
+            $realPath = $dir->getRealPath();
+            $cleanup[] = $realPath;
+        });
+        foreach ($cleanup as $realPath) {
+            rmdir($realPath);
+        }
+
+        rmdir($path);
     }
 
 
@@ -153,7 +175,7 @@ class ClassMapGeneratorTest extends TestCase
     {
         $fixturePath = __DIR__ . '/fixture';
         if (is_dir($fixturePath)) {
-            $this->cleanUpPathRecursive($fixturePath);
+            self::cleanUpPathRecursive($fixturePath);
         }
         else {
             mkdir($fixturePath, 0777, true);
