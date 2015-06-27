@@ -48,6 +48,7 @@ class ClassMapGenerator
                 }
             });
         }
+        ksort($map);
         return $map;
     }
 

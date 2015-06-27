@@ -33,26 +33,54 @@ class ClassMapGeneratorTest extends TestCase
 
     public function testBehindClassLoaderFolder()
     {
-        $fixturePath = __DIR__ . '/fixture';
-
-        if (is_dir($fixturePath)) {
-            $this->cleanUpPathRecursive($fixturePath);
-        }
-        else {
-            mkdir($fixturePath, 0777, true);
-        }
+        $fixturePath = $this->getPreparedFixturePath();
         $this->addFileToPath($fixturePath, 'A.php', $this->buildClassCode('A'));
         $this->addFileToPath($fixturePath, 'B.php', $this->buildClassCode('B'));
         $this->addFileToPath($fixturePath, 'X.php', $this->buildClassCode('C'));
+        if (defined('T_TRAIT')) {
+            //$this->addFileToPath($fixturePath, 'Trait.php', $this->buildTraitCode('MyTrait'));
+        }
+        $this->addFileToPath($fixturePath . '/subfolder', 'X.php', $this->buildAbstractClassCode('X'));
+        $this->addFileToPath($fixturePath . '/subfolder', 'AA.php', $this->buildInterfaceCode('AA'));
 
         $classMapGenerator = new ClassMapGenerator();
         $classMapGenerator->addPath($fixturePath);
 
-        $this->assertEquals(array(
+        $expected = array(
             'A' => realpath($fixturePath . '/A.php'),
+            'AA' => realpath($fixturePath . '/subfolder/AA.php'),
             'B' => realpath($fixturePath . '/B.php'),
             'C' => realpath($fixturePath . '/X.php'),
-        ), $classMapGenerator->generate());
+            //'MyTrait' => realpath($fixturePath . '/Trait.php'),
+            'X' => realpath($fixturePath . '/subfolder/X.php'),
+        );
+        if (!defined('T_TRAIT')) {
+            unset($expected['MyTrait']);
+        }
+        $this->assertEquals($expected, $classMapGenerator->generate());
+    }
+
+
+    public function testMultipleClasses()
+    {
+        $fixturePath = $this->getPreparedFixturePath();
+
+        $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->addPath($fixturePath);
+
+        // with default settings H is not found!
+        $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('G') . "\n" . $this->buildClassCode('H'));
+        $this->assertEquals(array('G' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
+        // with default settings G is not found!
+        $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('H') . "\n" . $this->buildClassCode('G'));
+        $this->assertEquals(array('H' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
+
+        // activate full processing of all tokens
+        $classMapGenerator->acceptMultipleClassesPerFile(true);
+        $this->assertEquals(array(
+            'G' => realpath($fixturePath . '/GsndH.php'),
+            'H' => realpath($fixturePath . '/GsndH.php'),
+        ), $classMapGenerator->generate());;
 
     }
 
@@ -62,7 +90,7 @@ class ClassMapGeneratorTest extends TestCase
         $cleanup = array();
         $files = new Iterator($path);
 
-        $files->forEachFile(function(File $fileOrDir) use ($cleanup) {
+        $files->forEachFile(function(File $fileOrDir) use (&$cleanup) {
             $realPath = $fileOrDir->getRealPath();
             $cleanup[] = $realPath;
         });
@@ -74,6 +102,9 @@ class ClassMapGeneratorTest extends TestCase
 
     private function addFileToPath($path, $filename, $code)
     {
+        if (!is_dir(&$path)) {
+            mkdir(&$path, 0777, true);
+        }
         file_put_contents("$path/$filename", $code);
     }
 
@@ -85,5 +116,48 @@ class ClassMapGeneratorTest extends TestCase
     private function buildClassCode($className)
     {
         return "<?php\nclass $className\n{}";
+    }
+
+    /**
+     * @param string $className
+     * @return string
+     */
+    private function buildAbstractClassCode($className)
+    {
+        return "<?php\nabstract class $className\n{}";
+    }
+
+    /**
+     * @param string $className
+     * @return string
+     */
+    private function buildInterfaceCode($className)
+    {
+        return "<?php\ninterface $className\n{}";
+    }
+
+    /**
+     * @param string $className
+     * @return string
+     */
+    private function buildTraitCode($className)
+    {
+        return "<?php\trait $className\n{}";
+    }
+
+
+    /**
+     * @return string
+     */
+    private function getPreparedFixturePath()
+    {
+        $fixturePath = __DIR__ . '/fixture';
+        if (is_dir($fixturePath)) {
+            $this->cleanUpPathRecursive($fixturePath);
+        }
+        else {
+            mkdir($fixturePath, 0777, true);
+        }
+        return $fixturePath;
     }
 }
