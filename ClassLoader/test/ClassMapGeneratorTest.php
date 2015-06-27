@@ -48,9 +48,7 @@ class ClassMapGeneratorTest extends TestCase
         $this->addFileToPath($fixturePath, 'A.php', $this->buildClassCode('A'));
         $this->addFileToPath($fixturePath, 'B.php', $this->buildClassCode('B'));
         $this->addFileToPath($fixturePath, 'X.php', $this->buildClassCode('C'));
-        if (defined('T_TRAIT')) {
-            $this->addFileToPath($fixturePath, 'Trait.php', $this->buildTraitCode('MyTrait'));
-        }
+        $this->addFileToPath($fixturePath, 'Trait.php', $this->buildTraitCode('MyTrait'));
         $this->addFileToPath($fixturePath . '/subfolder', 'X.php', $this->buildAbstractClassCode('X'));
         $this->addFileToPath($fixturePath . '/subfolder', 'AA.php', $this->buildInterfaceCode('AA'));
 
@@ -65,7 +63,9 @@ class ClassMapGeneratorTest extends TestCase
             'MyTrait' => realpath($fixturePath . '/Trait.php'),
             'X' => realpath($fixturePath . '/subfolder/X.php'),
         );
-        if (!defined('T_TRAIT')) {
+
+        // trait file exists but class map does not recognize it because tokenizer does not know anything about traits
+        if (version_compare(PHP_VERSION, '5.4', '<')) {
             unset($expected['MyTrait']);
         }
         $this->assertEquals($expected, $classMapGenerator->generate());
@@ -82,6 +82,7 @@ class ClassMapGeneratorTest extends TestCase
         // with default settings H is not found!
         $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('G') . "\n?>\n" . $this->buildClassCode('H'));
         $this->assertEquals(array('G' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
+
         // with default settings G is not found!
         $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('H') . "\n?>\n" . $this->buildClassCode('G'));
         $this->assertEquals(array('H' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
