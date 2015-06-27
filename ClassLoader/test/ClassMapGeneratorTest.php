@@ -49,7 +49,7 @@ class ClassMapGeneratorTest extends TestCase
         $this->addFileToPath($fixturePath, 'B.php', $this->buildClassCode('B'));
         $this->addFileToPath($fixturePath, 'X.php', $this->buildClassCode('C'));
         if (defined('T_TRAIT')) {
-            //$this->addFileToPath($fixturePath, 'Trait.php', $this->buildTraitCode('MyTrait'));
+            $this->addFileToPath($fixturePath, 'Trait.php', $this->buildTraitCode('MyTrait'));
         }
         $this->addFileToPath($fixturePath . '/subfolder', 'X.php', $this->buildAbstractClassCode('X'));
         $this->addFileToPath($fixturePath . '/subfolder', 'AA.php', $this->buildInterfaceCode('AA'));
@@ -62,7 +62,7 @@ class ClassMapGeneratorTest extends TestCase
             'AA' => realpath($fixturePath . '/subfolder/AA.php'),
             'B' => realpath($fixturePath . '/B.php'),
             'C' => realpath($fixturePath . '/X.php'),
-            //'MyTrait' => realpath($fixturePath . '/Trait.php'),
+            'MyTrait' => realpath($fixturePath . '/Trait.php'),
             'X' => realpath($fixturePath . '/subfolder/X.php'),
         );
         if (!defined('T_TRAIT')) {
@@ -80,10 +80,10 @@ class ClassMapGeneratorTest extends TestCase
         $classMapGenerator->addPath($fixturePath);
 
         // with default settings H is not found!
-        $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('G') . "\n" . $this->buildClassCode('H'));
+        $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('G') . "\n?>\n" . $this->buildClassCode('H'));
         $this->assertEquals(array('G' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
         // with default settings G is not found!
-        $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('H') . "\n" . $this->buildClassCode('G'));
+        $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('H') . "\n?>\n" . $this->buildClassCode('G'));
         $this->assertEquals(array('H' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
 
         // activate full processing of all tokens

@@ -35,12 +35,13 @@ class ClassMapGenerator
         $me  = $this;
         foreach ($this->paths as $path) {
             $fileIterator = new Iterator($path);
-            $fileIterator->forEachFile(function(File $fileInfo) use ($me, &$map) {
-                $tokens = token_get_all($fileInfo->getContent());
+            $fileIterator->forEachFile(function(File $file) use ($me, &$map) {
+                $phpCode = $file->getContent();
+                $tokens = token_get_all($phpCode);
                 foreach ($tokens as $i => $token) {
                     if ($me->isTokenClass($token[0])) {
                         $class = $tokens[$i + 2][1];
-                        $map[$class] = $fileInfo->getRealPath();
+                        $map[$class] = $file->getRealPath();
                         if (!$me->acceptsMultipleClassesPerFile()) {
                             return;
                         }
