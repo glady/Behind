@@ -33,6 +33,10 @@ matrix:
 # - linux
 # - osx        # error: in os section: dropping osx, does not support php
 
+install:
+ - composer self-update
+ - composer install
+
 before_script:
  - if [[ "$COVER" == 1 ]]; then ./tools/prepare_coverage.sh; fi
 
