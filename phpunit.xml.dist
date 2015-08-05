@@ -6,7 +6,7 @@
          syntaxCheck="false"
          backupGlobals="false"
          backupStaticAttributes="false"
-         bootstrap="bootstrap.php"
+         bootstrap="test-bootstrap.php"
         >
     <testsuites>
         <testsuite name="ClassLoader">

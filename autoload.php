@@ -1,8 +1,12 @@
 <?php
-require __DIR__ . '/TestFramework/UnitTest/Helper/Mocker.php';
-use glady\Behind\TestFramework\UnitTest\Helper\Mocker;
-// global functions have to be defined before classes using them!
-Mocker::makeGlobalFunctionMockable('spl_autoload_register', 'glady\Behind\ClassLoader');
+/*
+ * This file is part of the Behind-Project (https://github.com/glady/Behind).
+ *
+ * (c) Mike Gladysch <mail@mike-gladysch.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 require_once __DIR__ . "/ClassLoader/ClassLoader.php";
 use glady\Behind\ClassLoader\ClassLoader;

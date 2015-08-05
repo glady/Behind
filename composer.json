@@ -1,0 +1,15 @@
+{
+  "name": "glady/Behind",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Mike Gladysch",
+      "email": "mail@mike-gladysch.de"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {},
+  "autoload": {
+    "files": ["autoload.php"]
+  }
+}
