@@ -13,7 +13,19 @@ master:
 Milestones
 ----------
 
-1. *ClassLoader*-Instance which can be registered as php-autoloader
-2. *PackageHandler* as extension for ClassLoader
-3. *TestFramework* for simple test cases needed to test contained tools
-4. *ErrorHandler* and a class for *Debug*-Information
+1.1. [DONE] *ClassLoader*-Instance which can be registered as php-autoloader
+1.2. [DONE] *PackageHandler* as extension for ClassLoader
+1.3. [DONE] *ClassMapGenerator* for automatic generation of class maps thats can be used by ClassLoader
+2. *TestFramework* for simple test cases needed to test contained tools
+3. *ErrorHandler* and a class for *Debug*-Information
+
+Basic Usage
+-----------
+
+The target is to create *independent* classes, not a FrameWork. You can use one single file (e.g. ClassLoader) for single require within your code. Only extensions should require their base class(es).
+
+Two usages are possible:
+1. use single files (possibly with their base classes)
+2. use composer package for full toolbox
+
+When using composer package, a class loader instance is registered for loading classes of this toolbox. This classloader can be modified and extended by getting instance by "\glady\Behind::getClassLoader()".
