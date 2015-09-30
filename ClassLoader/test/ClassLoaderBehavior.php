@@ -109,10 +109,17 @@ abstract class ClassLoaderBehavior extends TestCase
         $this->classLoader->fileToClassMap[$file] = $classes;
     }
 
+
     protected function whenITryToLoadExistingClass($className)
     {
         $this->loadedClassName = $className;
         $this->classLoader->loadClass($className);
+    }
+
+
+    protected function whenICheckClassExists($className)
+    {
+        $this->whenITryToLoadExistingClass($className);
     }
 
 
@@ -227,6 +234,18 @@ abstract class ClassLoaderBehavior extends TestCase
     {
         $this->classLoader->loadedClasses[] = $className;
     }
+
+
+    protected function thenClassShouldNotBeDeclared($className)
+    {
+        $this->assertFalse(in_array($className, $this->classLoader->loadedClasses));
+    }
+
+
+    protected function thenClassShouldBeDeclared($className)
+    {
+        $this->assertTrue(in_array($className, $this->classLoader->loadedClasses));
+    }
 }
 
 
@@ -267,6 +286,10 @@ class MockClassLoader extends ClassLoader
 
     protected function includeFile($fileName)
     {
+        if (isset($this->includedFiles[$fileName])) {
+            throw new \Exception('error. file included twice. can produce fatal errors.');
+        }
+        $this->includedFiles[$fileName] = $fileName;
         $this->loadedClasses = array_merge($this->loadedClasses, $this->fileToClassMap[$fileName]);
     }
 }

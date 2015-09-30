@@ -49,6 +49,9 @@ class ClassLoader
 
     /** @var int */
     protected $autoIndex = 1;
+
+    /** @var string[] */
+    private $invalidClassNames = array();
     //</editor-fold>
 
 
@@ -117,6 +120,10 @@ class ClassLoader
      */
     public function loadClass($className)
     {
+        if (isset($this->invalidClassNames[$className])) {
+            return false;
+        }
+
         $state = array(
             self::LOAD_STATE_LOADED     => false,
             self::LOAD_STATE_CLASS_NAME => $className,
@@ -131,6 +138,10 @@ class ClassLoader
             }
         }
         $this->fire(self::ON_AFTER_LOAD, $state);
+
+        if ($state[self::LOAD_STATE_LOADED] === false) {
+            $this->invalidClassNames[$className] = $className;
+        }
 
         return $state[self::LOAD_STATE_LOADED];
     }

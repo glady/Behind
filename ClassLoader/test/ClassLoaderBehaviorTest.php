@@ -206,4 +206,19 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->whenITryToLoadExistingClass('glady\BehindTest\MyLittleTest');
         $this->thenIShouldHaveLoadedFile('/test/MyLittleTest/_MyLittleTest.php');
     }
+
+
+    public function testWrongClassName()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass.php', array('TestFolder_TestClassInvalid'));
+        $this->givenIHaveASeparatorRuleWith_AsSeparatorOnDirectory('_', '/');
+
+        $this->whenICheckClassExists('TestFolder_TestClass');
+        $this->thenClassShouldNotBeDeclared('TestFolder_TestClass');
+        $this->thenClassShouldBeDeclared('TestFolder_TestClassInvalid');
+
+        $this->whenICheckClassExists('TestFolder_TestClass');
+        $this->theNoFatalErrorShouldOccur();
+    }
 }
