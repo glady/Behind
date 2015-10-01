@@ -33,6 +33,8 @@ matrix:
 # - linux
 # - osx        # error: in os section: dropping osx, does not support php
 
+sudo: false
+
 install:
  - composer self-update
  - composer install
