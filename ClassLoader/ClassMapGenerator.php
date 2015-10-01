@@ -44,13 +44,16 @@ class ClassMapGenerator
                         $namespace = $tokens[$i + 2][1];
                     }
                     if ($me->isTokenClass($token[0])) {
-                        $class = $tokens[$i + 2][1];
-                        if ($namespace) {
-                            $class = "$namespace\\$class";
-                        }
-                        $map[$class] = $file->getRealPath();
-                        if (!$me->acceptsMultipleClassesPerFile()) {
-                            return;
+                        // TODO: move to check-fn
+                        if ($tokens[$i + 1][0] === T_WHITESPACE && $tokens[$i + 2][0] === T_STRING) {
+                            $class = $tokens[$i + 2][1];
+                            if ($namespace) {
+                                $class = "$namespace\\$class";
+                            }
+                            $map[$class] = $file->getRealPath();
+                            if (!$me->acceptsMultipleClassesPerFile()) {
+                                return;
+                            }
                         }
                     }
                 }

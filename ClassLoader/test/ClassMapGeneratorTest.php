@@ -220,4 +220,40 @@ class ClassMapGeneratorTest extends TestCase
 
         $this->assertEquals(array('X' => realpath($fixturePath . '/X.php')), $classMapGenerator->generate());;
     }
+
+
+    public function testParsingClassTokenWithMultipleClassesAllowed()
+    {
+        $php = "<?php\nclass X {\nfunction test() { return self::class; }\n}";
+
+        $fixturePath = $this->getPreparedFixturePath();
+
+        $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->acceptMultipleClassesPerFile();
+        $classMapGenerator->addPath($fixturePath);
+
+        $this->addFileToPath($fixturePath, 'X.php', $php);
+
+        $this->assertEquals(array('X' => realpath($fixturePath . '/X.php')), $classMapGenerator->generate());;
+    }
+
+
+
+    public function testParsingClassTokenWithMultipleClassesAllowedAndSecondClass()
+    {
+        $php = "<?php\nclass X {\nfunction test() { return self::class; }\n}\n\nclass Y [}";
+
+        $fixturePath = $this->getPreparedFixturePath();
+
+        $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->acceptMultipleClassesPerFile();
+        $classMapGenerator->addPath($fixturePath);
+
+        $this->addFileToPath($fixturePath, 'X.php', $php);
+
+        $this->assertEquals(array(
+            'X' => realpath($fixturePath . '/X.php'),
+            'Y' => realpath($fixturePath . '/X.php')
+        ), $classMapGenerator->generate());;
+    }
 }
