@@ -253,9 +253,9 @@ class MockClassLoader extends ClassLoader
 {
     /** @var array */
     public $_eventsFired = array();
-
     public $loadedClasses = array();
     public $fileToClassMap = array();
+    public $testIncludedFiles = array();
 
 
     /**
@@ -286,10 +286,10 @@ class MockClassLoader extends ClassLoader
 
     protected function includeFile($fileName)
     {
-        if (isset($this->includedFiles[$fileName])) {
+        if (isset($this->testIncludedFiles[$fileName])) {
             throw new \Exception('error. file included twice. can produce fatal errors.');
         }
-        $this->includedFiles[$fileName] = $fileName;
+        $this->testIncludedFiles[$fileName] = $fileName;
         $this->loadedClasses = array_merge($this->loadedClasses, $this->fileToClassMap[$fileName]);
     }
 }

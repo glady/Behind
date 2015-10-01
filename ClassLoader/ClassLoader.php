@@ -51,7 +51,7 @@ class ClassLoader
     protected $autoIndex = 1;
 
     /** @var string[] */
-    private $invalidClassNames = array();
+    private $includedFiles = array();
     //</editor-fold>
 
 
@@ -120,10 +120,6 @@ class ClassLoader
      */
     public function loadClass($className)
     {
-        if (isset($this->invalidClassNames[$className])) {
-            return false;
-        }
-
         $state = array(
             self::LOAD_STATE_LOADED     => false,
             self::LOAD_STATE_CLASS_NAME => $className,
@@ -138,10 +134,6 @@ class ClassLoader
             }
         }
         $this->fire(self::ON_AFTER_LOAD, $state);
-
-        if ($state[self::LOAD_STATE_LOADED] === false) {
-            $this->invalidClassNames[$className] = $className;
-        }
 
         return $state[self::LOAD_STATE_LOADED];
     }
@@ -291,8 +283,9 @@ class ClassLoader
         if ($fileName !== null && $this->fileExists($fileName)) {
             $this->fire(self::ON_BEFORE_REQUIRE, $state);
 
-            if (!$this->classExists($className)) {
+            if (!$this->classExists($className) && !$this->isFileAlreadyIncluded($fileName)) {
                 $this->includeFile($fileName);
+                $this->setFileIncluded($fileName);
             }
 
             if ($this->classExists($className)) {
@@ -538,5 +531,24 @@ class ClassLoader
         return isset($array[$key])
             ? $array[$key]
             : $default;
+    }
+
+
+    /**
+     * @param string $fileName
+     * @return bool
+     */
+    protected function isFileAlreadyIncluded($fileName)
+    {
+        return isset($this->includedFiles[$fileName]);
+    }
+
+
+    /**
+     * @param string $fileName
+     */
+    private function setFileIncluded($fileName)
+    {
+        $this->includedFiles[$fileName] = true;
     }
 }

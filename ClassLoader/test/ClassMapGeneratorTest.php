@@ -205,4 +205,19 @@ class ClassMapGeneratorTest extends TestCase
         return "<?php"
             . ($namespace ? "\nnamespace $namespace;" : '');
     }
+
+
+    public function testParsingClassToken()
+    {
+        $php = "<?php\nclass X {\nfunction test() { return self::class; }\n}";
+
+        $fixturePath = $this->getPreparedFixturePath();
+
+        $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->addPath($fixturePath);
+
+        $this->addFileToPath($fixturePath, 'X.php', $php);
+
+        $this->assertEquals(array('X' => realpath($fixturePath . '/X.php')), $classMapGenerator->generate());;
+    }
 }

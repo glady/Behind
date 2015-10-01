@@ -221,4 +221,17 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->whenICheckClassExists('TestFolder_TestClass');
         $this->theNoFatalErrorShouldOccur();
     }
+
+
+    public function testWrongClassNameAddRuleAndLoadAgain()
+    {
+        $this->testWrongClassName();
+
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/TestFolder/TestClass/_TestClass.php', array('TestFolder_TestClass'));
+        $this->givenIHaveASeparatorRuleWith_AndSubDirMappingCharacter_AsSeparatorOnDirectory('_', '_', '/');
+
+        $this->whenICheckClassExists('TestFolder_TestClass');
+        $this->thenClassShouldBeDeclared('TestFolder_TestClass');
+        $this->thenClassShouldBeDeclared('TestFolder_TestClassInvalid');
+    }
 }
