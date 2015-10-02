@@ -61,7 +61,7 @@ class ClassMapGenerator
                     if ($me->isTokenClass($token[0])) {
                         // TODO: move to check-fn
                         //if ($tokens[$i + 1][0] === T_WHITESPACE && $tokens[$i + 2][0] === T_STRING) {
-                        if (isset($tokens[$i + 2][1])) {
+                        if (isset($tokens[$i + 2][1]) && trim($tokens[$i + 2][1])) {
                             $class = $tokens[$i + 2][1];
                             if ($namespace) {
                                 $class = "$namespace\\$class";
