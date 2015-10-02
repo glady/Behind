@@ -19,48 +19,89 @@ use glady\Behind\Utils\File\Iterator;
  */
 class ClassMapGenerator
 {
+    /** @var string */
+    private $basePath = '';
+
     /** @var array */
     private $paths = array();
 
     /** @var bool */
     private $acceptMultipleClassesPerFile = false;
 
+    /** @var string|null */
+    private $fileNamePattern = null;
+
 
     /**
+     * @param string $fileNamePattern
      * @return array
      */
-    public function generate()
+    public function generate($fileNamePattern = null)
     {
         $map = array();
         $me  = $this;
         foreach ($this->paths as $path) {
             $fileIterator = new Iterator($path);
             $fileIterator->forEachFile(function(File $file) use ($me, &$map) {
+                if (!$file->isPhp()) {
+                    return;
+                }
                 $phpCode = $file->getContent();
                 $tokens = token_get_all($phpCode);
                 $namespace = '';
                 foreach ($tokens as $i => $token) {
                     if ($me->isTokenNamespace($token[0])) {
-                        $namespace = $tokens[$i + 2][1];
+                        $cursor = $i + 2;
+                        while ($tokens[$cursor] !== ';' && $tokens[$cursor] !== '{') {
+                            $namespace .= $tokens[$cursor][1];
+                            $cursor++;
+                        }
+                        $namespace = trim($namespace);
                     }
                     if ($me->isTokenClass($token[0])) {
                         // TODO: move to check-fn
-                        if ($tokens[$i + 1][0] === T_WHITESPACE && $tokens[$i + 2][0] === T_STRING) {
+                        //if ($tokens[$i + 1][0] === T_WHITESPACE && $tokens[$i + 2][0] === T_STRING) {
+                        if (isset($tokens[$i + 2][1])) {
                             $class = $tokens[$i + 2][1];
                             if ($namespace) {
                                 $class = "$namespace\\$class";
                             }
-                            $map[$class] = $file->getRealPath();
+                            $realPath = $file->getRealPath();
+                            $realPath = str_replace("\\", '/', $realPath);
+                            $mapPath = str_replace($this->basePath . '/', '', $realPath);
+                            $map[$class] = $mapPath;
                             if (!$me->acceptsMultipleClassesPerFile()) {
                                 return;
                             }
                         }
                     }
                 }
-            });
+            }, $this->getFileNamePattern($fileNamePattern));
         }
         ksort($map);
         return $map;
+    }
+
+
+    /**
+     * @param string $basePath
+     */
+    public function setRelativeToPath($basePath)
+    {
+        $this->basePath = str_replace("\\", '/', $basePath);
+    }
+
+
+    public function setFileNamePattern($fileNamePattern = null)
+    {
+        $this->fileNamePattern = $fileNamePattern;
+    }
+
+
+    public function getFileNamePattern($fileNamePattern = null)
+    {
+        return $fileNamePattern
+            ?: $this->fileNamePattern;
     }
 
 
@@ -111,5 +152,4 @@ class ClassMapGenerator
     {
         $this->acceptMultipleClassesPerFile = $acceptMultipleClassesPerFile === true;
     }
-
 }

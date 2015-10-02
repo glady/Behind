@@ -12,6 +12,7 @@ namespace glady\Behind\Utils\File;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use SplFileInfo;
 
 /**
  * Class FileSystemIterator
@@ -39,11 +40,12 @@ class Iterator
 
     /**
      * @param callable $callable
+     * @param string|null $fileNamePattern
      */
-    public function forEachFile($callable)
+    public function forEachFile($callable, $fileNamePattern = null)
     {
         foreach ($this->getIterator() as $fileInfo) {
-            if ($fileInfo->isFile()) {
+            if ($fileInfo->isFile() && $this->fileNameMatches($fileInfo, $fileNamePattern)) {
                 $file = new File($fileInfo->openFile());
                 call_user_func_array($callable, array($file));
                 $file = null;
@@ -70,7 +72,7 @@ class Iterator
 
 
     /**
-     * @return RecursiveIteratorIterator
+     * @return RecursiveIteratorIterator|SplFileInfo[]
      */
     private function getIterator()
     {
@@ -78,5 +80,15 @@ class Iterator
             new RecursiveDirectoryIterator($this->path, RecursiveDirectoryIterator::SKIP_DOTS),
             $this->mode
         );
+    }
+
+    /**
+     * @param SplFileInfo $fileInfo
+     * @param string|null $fileNamePattern
+     * @return bool
+     */
+    protected function fileNameMatches(SplFileInfo $fileInfo, $fileNamePattern = null)
+    {
+        return $fileNamePattern === null || preg_match($fileNamePattern, $fileInfo->getRealPath());
     }
 }

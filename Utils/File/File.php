@@ -32,18 +32,32 @@ class File
 
 
     /**
+     * @param int      $offset
+     * @param int|null $limit
      * @return string
      */
-    public function getContent()
+    public function getContent($offset = 0, $limit = null)
     {
         $this->fileObject->rewind();
         $fileContent = '';
-        while (!$this->fileObject->eof()) {
-            $fileContent .= $this->fileObject->fgets();
+
+        $current = 0;
+        // TODO: support negative limit?
+        $stop = $limit === null ? PHP_INT_MAX : $offset + $limit;
+
+        while (!$this->fileObject->eof() && $current < $stop) {
+            $line = $this->fileObject->fgets();
+            $current += strlen($line);
+            $fileContent .= $line;
             $this->fileObject->next();
         }
 
-        return $fileContent;
+        if ($limit === null) {
+            // WTF: third parameter = null is not the same like without third parameter
+            return substr($fileContent, $offset);
+        }
+
+        return substr($fileContent, $offset, $limit);
     }
 
 
@@ -53,5 +67,11 @@ class File
     public function getRealPath()
     {
         return $this->fileObject->getRealPath();
+    }
+
+
+    public function isPhp()
+    {
+        return $this->getContent(0, 5) === '<?php';
     }
 }
