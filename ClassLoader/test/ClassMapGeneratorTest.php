@@ -54,16 +54,17 @@ class ClassMapGeneratorTest extends TestCase
         $this->addFileToPath($fixturePath . '/subfolder', 'AA.php', $this->buildInterfaceCode('AA'));
 
         $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->setRelativeToPath($fixturePath);
         $classMapGenerator->addPath($fixturePath);
 
         $expected = array(
-            'A' => realpath($fixturePath . '/A.php'),
-            'AA' => realpath($fixturePath . '/subfolder/AA.php'),
-            'B' => realpath($fixturePath . '/B.php'),
-            'C' => realpath($fixturePath . '/X.php'),
-            'MyNamespace\A' => realpath($fixturePath . '/NamespacedA.php'),
-            'MyTrait' => realpath($fixturePath . '/Trait.php'),
-            'X' => realpath($fixturePath . '/subfolder/X.php'),
+            'A' => 'A.php',
+            'AA' => 'subfolder/AA.php',
+            'B' => 'B.php',
+            'C' => 'X.php',
+            'MyNamespace\A' => 'NamespacedA.php',
+            'MyTrait' => 'Trait.php',
+            'X' => 'subfolder/X.php',
         );
 
         // trait file exists but class map does not recognize it because tokenizer does not know anything about traits
@@ -79,21 +80,22 @@ class ClassMapGeneratorTest extends TestCase
         $fixturePath = $this->getPreparedFixturePath();
 
         $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->setRelativeToPath($fixturePath);
         $classMapGenerator->addPath($fixturePath);
 
         // with default settings H is not found!
         $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('G') . "\n?>\n" . $this->buildClassCode('H'));
-        $this->assertEquals(array('G' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
+        $this->assertEquals(array('G' => 'GsndH.php'), $classMapGenerator->generate());;
 
         // with default settings G is not found!
         $this->addFileToPath($fixturePath, 'GsndH.php', $this->buildClassCode('H') . "\n?>\n" . $this->buildClassCode('G'));
-        $this->assertEquals(array('H' => realpath($fixturePath . '/GsndH.php')), $classMapGenerator->generate());;
+        $this->assertEquals(array('H' => 'GsndH.php'), $classMapGenerator->generate());;
 
         // activate full processing of all tokens
         $classMapGenerator->acceptMultipleClassesPerFile(true);
         $this->assertEquals(array(
-            'G' => realpath($fixturePath . '/GsndH.php'),
-            'H' => realpath($fixturePath . '/GsndH.php'),
+            'G' => 'GsndH.php',
+            'H' => 'GsndH.php',
         ), $classMapGenerator->generate());;
 
     }
@@ -214,11 +216,12 @@ class ClassMapGeneratorTest extends TestCase
         $fixturePath = $this->getPreparedFixturePath();
 
         $classMapGenerator = new ClassMapGenerator();
+        $classMapGenerator->setRelativeToPath($fixturePath);
         $classMapGenerator->addPath($fixturePath);
 
         $this->addFileToPath($fixturePath, 'X.php', $php);
 
-        $this->assertEquals(array('X' => realpath($fixturePath . '/X.php')), $classMapGenerator->generate());;
+        $this->assertEquals(array('X' => 'X.php'), $classMapGenerator->generate());;
     }
 
 
@@ -230,11 +233,12 @@ class ClassMapGeneratorTest extends TestCase
 
         $classMapGenerator = new ClassMapGenerator();
         $classMapGenerator->acceptMultipleClassesPerFile();
+        $classMapGenerator->setRelativeToPath($fixturePath);
         $classMapGenerator->addPath($fixturePath);
 
         $this->addFileToPath($fixturePath, 'X.php', $php);
 
-        $this->assertEquals(array('X' => realpath($fixturePath . '/X.php')), $classMapGenerator->generate());;
+        $this->assertEquals(array('X' => 'X.php'), $classMapGenerator->generate());;
     }
 
 
@@ -247,13 +251,14 @@ class ClassMapGeneratorTest extends TestCase
 
         $classMapGenerator = new ClassMapGenerator();
         $classMapGenerator->acceptMultipleClassesPerFile();
+        $classMapGenerator->setRelativeToPath($fixturePath);
         $classMapGenerator->addPath($fixturePath);
 
         $this->addFileToPath($fixturePath, 'X.php', $php);
 
         $this->assertEquals(array(
-            'X' => realpath($fixturePath . '/X.php'),
-            'Y' => realpath($fixturePath . '/X.php')
-        ), $classMapGenerator->generate());;
+            'X' => 'X.php',
+            'Y' => 'X.php'
+        ), $classMapGenerator->generate());
     }
 }
