@@ -68,7 +68,7 @@ class ClassMapGenerator
                             }
                             $realPath = $file->getRealPath();
                             $realPath = str_replace("\\", '/', $realPath);
-                            $mapPath = str_replace($this->basePath . '/', '', $realPath);
+                            $mapPath = str_replace($me->getRelativeToPath() . '/', '', $realPath);
                             $map[$class] = $mapPath;
                             if (!$me->acceptsMultipleClassesPerFile()) {
                                 return;
@@ -89,6 +89,15 @@ class ClassMapGenerator
     public function setRelativeToPath($basePath)
     {
         $this->basePath = str_replace("\\", '/', $basePath);
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getRelativeToPath()
+    {
+        return $this->basePath;
     }
 
 
