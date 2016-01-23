@@ -29,6 +29,9 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         if ($this->className) {
             $this->assertTrue(class_exists($this->className));
         }
+        else {
+            $this->markTestSkipped('no className given');
+        }
     }
 
 
