@@ -52,7 +52,7 @@ class Comparator extends ComparatorSettings
         for ($i = 0; $i < $lines; $i++) {
             $lineA = isset($linesA[$i]) ? $linesA[$i] : null;
             $lineB = isset($linesB[$i]) ? $linesB[$i] : null;
-            $result[] = $this->isEqual($lineA, $lineB); // ?: json_encode(array($lineA, $lineB));
+            $result[] = $this->isEqual($lineA, $lineB);
         }
         return $result;
     }
@@ -65,8 +65,8 @@ class Comparator extends ComparatorSettings
     public function modifyCompareValues(&$textA, &$textB)
     {
         // standard replaces: unify line separators
-        $search = array("\r\n", "\r");
-        $replace = array("\n", "\n");
+        $search = array("\r\n", "\r", "\n");
+        $replace = array_fill(0, 3, $this->getLineSeparator());
 
         // replace tab to ' ', then replace double '  ' to ' '
         if ($this->isIgnoreWhitespaces()) {

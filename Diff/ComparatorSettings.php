@@ -22,6 +22,9 @@ abstract class ComparatorSettings
     /** @var bool */
     private $ignoreWhitespaces = false;
 
+    /** @var string */
+    private $lineSeparator = "\n";
+
 
     /**
      * @return bool
@@ -59,6 +62,26 @@ abstract class ComparatorSettings
     public function setIgnoreWhitespaces($ignoreWhitespaces = true)
     {
         $this->ignoreWhitespaces = (bool)$ignoreWhitespaces;
+        return $this;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getLineSeparator()
+    {
+        return $this->lineSeparator;
+    }
+
+
+    /**
+     * @param string $lineSeparator
+     * @return $this
+     */
+    public function setLineSeparator($lineSeparator = "\n")
+    {
+        $this->lineSeparator = $lineSeparator;
         return $this;
     }
 

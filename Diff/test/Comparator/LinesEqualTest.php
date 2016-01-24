@@ -69,6 +69,24 @@ class LinesEqualTest extends TestCase
     }
 
 
+    public function testLineInserted()
+    {
+        $this->markTestIncomplete('not implemented yet');
+        $comparator = new Comparator();
+
+        $this->assertComparisonLines($comparator, "a\nc", "a\nb\nc", array(true, false, true));
+    }
+
+
+    public function testLineDeleted()
+    {
+        $this->markTestIncomplete('not implemented yet');
+        $comparator = new Comparator();
+
+        $this->assertComparisonLines($comparator, "a\nb\nc", "a\nc", array(true, false, true));
+    }
+
+
     private function assertComparisonLines(Comparator $comparator, $a, $b, $expected)
     {
         $this->assertSame($expected, $comparator->linesEqual($a, $b));
