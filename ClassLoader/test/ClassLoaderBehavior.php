@@ -19,9 +19,6 @@ use glady\Behind\TestFramework\UnitTest\TestCase;
  */
 abstract class ClassLoaderBehavior extends TestCase
 {
-    /** @var string */
-    protected $className = '\glady\Behind\ClassLoader\ClassLoader';
-
     /** @var MockCLassLoader */
     private $classLoader = null;
 
@@ -86,12 +83,14 @@ abstract class ClassLoaderBehavior extends TestCase
     }
 
 
-    protected function givenIHaveASeparatorRuleWith_AndFixedNamespace_OnDirectory_AsSeparatorOnDirectory($separator, $namspace, $fixedNamespaceDir, $directory)
+    protected function givenIHaveASeparatorRuleWith_AndFixedNamespace_OnDirectory_AsSeparatorOnDirectory(
+        $separator, $namespace, $fixedNamespaceDir, $directory
+    )
     {
         $directory = $this->makePathOsDependentValid($directory);
         $fixedNamespaceDir = $this->makePathOsDependentValid($fixedNamespaceDir);
         $this->numberOfRules++;
-        $this->classLoader->addSeparatorClassLoaderRule($directory, $separator, array($namspace => $fixedNamespaceDir));
+        $this->classLoader->addSeparatorClassLoaderRule($directory, $separator, array($namespace => $fixedNamespaceDir));
     }
 
 

@@ -16,25 +16,14 @@ namespace glady\Behind\TestFramework\UnitTest;
  */
 abstract class TestCase extends \PHPUnit_Framework_TestCase
 {
+    /** @var array */
     protected $tearDownSteps = array();
-    /** @var string */
-    protected $className = null;
 
 
     /**
-     *
+     * @param callable $callable
+     * @param array    $args
      */
-    public function testClassIsDefined()
-    {
-        if ($this->className) {
-            $this->assertTrue(class_exists($this->className));
-        }
-        else {
-            $this->markTestSkipped('no className given');
-        }
-    }
-
-
     protected function onTearDown($callable, array $args = array())
     {
         $this->tearDownSteps[] = array('callable' => $callable, 'args' => $args);
@@ -48,6 +37,4 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         }
         parent::tearDown();
     }
-
-
 }

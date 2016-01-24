@@ -11,15 +11,15 @@
 namespace glady\Behind\ClassLoader\test;
 
 use glady\Behind\ClassLoader\ClassLoader;
+use glady\Behind\TestFramework\UnitTest\BaseClassTestCase;
 use glady\Behind\TestFramework\UnitTest\Helper\Mocker;
 use glady\Behind\TestFramework\UnitTest\Helper\Reflection;
-use glady\Behind\TestFramework\UnitTest\TestCase;
 
 /**
  * Class ClassLoaderTest
  * @package glady\Behind\ClassLoader\test
  */
-class ClassLoaderTest extends TestCase
+class ClassLoaderTest extends BaseClassTestCase
 {
     protected $className = '\glady\Behind\ClassLoader\ClassLoader';
 

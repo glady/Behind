@@ -11,7 +11,7 @@
 namespace glady\Behind\ClassLoader\test;
 
 use glady\Behind\ClassLoader\ClassMapGenerator;
-use glady\Behind\TestFramework\UnitTest\TestCase;
+use glady\Behind\TestFramework\UnitTest\BaseClassTestCase;
 use glady\Behind\Utils\File\Directory;
 use glady\Behind\Utils\File\File;
 use glady\Behind\Utils\File\Iterator;
@@ -20,7 +20,7 @@ use glady\Behind\Utils\File\Iterator;
  * Class ClassMapGeneratorTest
  * @package glady\Behind\ClassLoader\test
  */
-class ClassMapGeneratorTest extends TestCase
+class ClassMapGeneratorTest extends BaseClassTestCase
 {
     protected $className = '\glady\Behind\ClassLoader\ClassMapGenerator';
 
