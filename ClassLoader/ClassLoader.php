@@ -65,7 +65,6 @@ class ClassLoader
     {
         if ($autoLoader === null) {
             $autoLoader = new self();
-            $autoLoader->addNamespaceClassLoaderRule(__DIR__);
         }
         spl_autoload_register(array($autoLoader, $fn));
         return $autoLoader;
@@ -107,10 +106,11 @@ class ClassLoader
 
     /**
      * @param $fileName
+     * @return mixed
      */
     protected function includeFile($fileName)
     {
-        include $fileName;
+        return include $fileName;
     }
 
 
@@ -163,7 +163,7 @@ class ClassLoader
             case 'separator-with-subdir-prefix':
                 $separator = $this->getFromArray($rule, 'separator', '\\');
                 $fixed     = $this->getFromArray($rule, 'fixed', array());
-                $root      = $this->getFromArray($rule, 'root', __DIR__);
+                $root      = $this->getFromArray($rule, 'root', null);
 
                 $fileName = $this->getFileNameBySeparator($className, $separator, $root, $fixed);
                 if ($type === 'separator') {
@@ -189,6 +189,9 @@ class ClassLoader
         if (($fixedNamespace = $this->getFixedNamespace($fixed, $className))) {
             $className = substr($className, strlen($fixedNamespace));
             $root = $fixed[$fixedNamespace];
+        }
+        else if ($root === null) {
+            return null;
         }
 
         $relativeFileName = str_replace($separator, DIRECTORY_SEPARATOR, $className);
@@ -407,11 +410,15 @@ class ClassLoader
 
     //<editor-fold desc="Short-Cut functions for define rules">
     /**
-     * @param array  $classMap
-     * @param string $baseDir
+     * @param array|null  $classMap
+     * @param string|null $baseDir
+     * @param string|null $file
      */
-    public function addClassMap(array $classMap, $baseDir = null)
+    public function addClassMap(array $classMap = null, $baseDir = null, $file = null)
     {
+        if ($classMap === null && $file && $this->fileExists($file)) {
+            $classMap = $this->includeFile($file);
+        }
         if (!empty($classMap)) {
             $rules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
             $rules[] = array('type' => 'map', 'classes' => $classMap, 'baseDir' => $baseDir);
@@ -551,4 +558,102 @@ class ClassLoader
     {
         $this->includedFiles[$fileName] = true;
     }
+
+
+    /**
+     * This function registers rules for composer-classmap, psr-0 autoloading and psr-4 autoloading.
+     * Not supported: custom autoloading by own file and include paths.
+     *
+     * used and not used files:
+     *  $vendorPath
+     *    `- composer
+     *      `- autoload_classmap.php    < used
+     *      `- autoload_files.php       < NOT used (own autoload-handling of other projects)
+     *      `- autoload_namespaces.php  < used (PSR-0)
+     *      `- autoload_psr4.php        < used (PSR-4)
+     *      `- autoload_real.php        < NOT used (internal configurator of ClassLoader.php)
+     *      `- ClassLoader.php          < NOT used (autoloading by composer)
+     *      `- include_paths.php        < NOT used
+     *
+     * @param string $vendorPath
+     */
+    public function addComposerVendorAutoloadRules($vendorPath)
+    {
+        $this->addClassMap(null, null, $vendorPath . '/composer/autoload_classmap.php');
+        $this->addPsr0Rules(null, $vendorPath . '/composer/autoload_namespaces.php');
+        $this->addPsr4Rules(null, $vendorPath . '/composer/autoload_psr4.php');
+    }
+
+
+    /**
+     * @param array[]|null $namespaces
+     * @param string|null $file
+     */
+    protected function addPsr0Rules(array $namespaces = null, $file = null)
+    {
+        if ($namespaces === null && $file && $this->fileExists($file)) {
+            $namespaces = $this->includeFile($file);
+        }
+
+        $rules = array(
+            array()
+        );
+
+        foreach ($namespaces as $namespace => $srcPaths) {
+            foreach ($srcPaths as $path) {
+                $psr0Path = str_replace('\\', '/', $namespace);
+                $realClassPath = $path . '/' . $psr0Path;
+                $this->applyNamespaceWithPathToRules($rules, $namespace, $realClassPath);
+            }
+        }
+
+        foreach ($rules as $rule) {
+            $this->addNamespaceClassLoaderRule(null, $rule);
+        }
+    }
+
+
+    /**
+     * @param array[]|null $namespaces
+     * @param string|null $file
+     */
+    protected function addPsr4Rules(array $namespaces = null, $file = null)
+    {
+        if ($namespaces === null && $file && $this->fileExists($file)) {
+            $namespaces = $this->includeFile($file);
+        }
+
+        $rules = array(
+            array()
+        );
+
+        foreach ($namespaces as $namespace => $srcPaths) {
+            foreach ($srcPaths as $path) {
+                $this->applyNamespaceWithPathToRules($rules, $namespace, $path);
+            }
+        }
+
+        foreach ($rules as $rule) {
+            $this->addNamespaceClassLoaderRule(null, $rule);
+        }
+    }
+
+    /**
+     * @param array  &$rules
+     * @param string $namespace
+     * @param string $realClassPath
+     */
+    protected function applyNamespaceWithPathToRules(array &$rules, $namespace, $realClassPath)
+    {
+        $ruleIndex = 0;
+        while (isset($rules[$ruleIndex][$namespace])) {
+            $ruleIndex++;
+            if (!isset($rules[$ruleIndex])) {
+                $rules[$ruleIndex] = array();
+                break;
+            }
+        }
+        $rules[$ruleIndex][$namespace] = $realClassPath;
+    }
+
 }
