@@ -620,6 +620,7 @@ class ClassLoader
 
         foreach ($rules as $rule) {
             $this->addNamespaceClassLoaderRule(null, $rule);
+            $this->addSeparatorClassLoaderRule(null, '_', $rule);
         }
     }
 
@@ -652,6 +653,7 @@ class ClassLoader
 
         foreach ($rules as $rule) {
             $this->addNamespaceClassLoaderRule(null, $rule);
+            $this->addSeparatorClassLoaderRule(null, '_', $rule);
         }
     }
 
