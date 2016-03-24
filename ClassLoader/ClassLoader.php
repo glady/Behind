@@ -416,14 +416,19 @@ class ClassLoader
      */
     public function addClassMap(array $classMap = null, $baseDir = null, $file = null)
     {
-        if ($classMap === null && $file && $this->fileExists($file)) {
-            $classMap = $this->includeFile($file);
+        if ($classMap === null && $file) {
+            if ($this->fileExists($file)) {
+                $classMap = $this->includeFile($file);
+            }
         }
-        if (!empty($classMap)) {
-            $rules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
-            $rules[] = array('type' => 'map', 'classes' => $classMap, 'baseDir' => $baseDir);
-            $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
+
+        if (!$classMap) {
+            return;
         }
+
+        $rules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
+        $rules[] = array('type' => 'map', 'classes' => $classMap, 'baseDir' => $baseDir);
+        $this->setConfig(self::CONFIG_LOAD_RULE_ORDERED, $rules);
     }
 
 
@@ -591,8 +596,14 @@ class ClassLoader
      */
     protected function addPsr0Rules(array $namespaces = null, $file = null)
     {
-        if ($namespaces === null && $file && $this->fileExists($file)) {
-            $namespaces = $this->includeFile($file);
+        if ($namespaces === null && $file) {
+            if ($this->fileExists($file)) {
+                $namespaces = $this->includeFile($file);
+            }
+        }
+
+        if (!$namespaces) {
+            return;
         }
 
         $rules = array(
@@ -619,8 +630,14 @@ class ClassLoader
      */
     protected function addPsr4Rules(array $namespaces = null, $file = null)
     {
-        if ($namespaces === null && $file && $this->fileExists($file)) {
-            $namespaces = $this->includeFile($file);
+        if ($namespaces === null && $file) {
+            if ($this->fileExists($file)) {
+                $namespaces = $this->includeFile($file);
+            }
+        }
+
+        if (!$namespaces) {
+            return;
         }
 
         $rules = array(
