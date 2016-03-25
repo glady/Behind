@@ -10,6 +10,8 @@
   "minimum-stability": "dev",
   "require": {},
   "autoload": {
-    "files": ["autoload.php"]
+    "psr-0": {
+      "glady\\Behind": "src"
+    }
   }
 }

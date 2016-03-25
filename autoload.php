@@ -8,15 +8,19 @@
  * file that was distributed with this source code.
  */
 
-require_once __DIR__ . "/ClassLoader/ClassLoader.php";
+require_once __DIR__ . "/src/glady/Behind/ClassLoader/ClassLoader.php";
 use glady\Behind\ClassLoader\ClassLoader;
 
 $classLoader = new ClassLoader();
 $namespaces = array(
-    'glady\Behind' => __DIR__
+    'glady' => __DIR__ . '/src/glady'
 );
-$classLoader->addNamespaceClassLoaderRule(__DIR__, $namespaces);
-$classLoader->addNamespaceClassLoaderRule(__DIR__, $namespaces, '_');
+$classLoader->addNamespaceClassLoaderRule(null, $namespaces);
 $classLoader->register();
+
+// Debugging class loading example:
+//$classLoader->on('all', function($me, $event, $state) {
+//    echo "\n $event - " . json_encode($state);
+//});
 
 \glady\Behind::setClassLoader($classLoader);

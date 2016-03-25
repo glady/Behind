@@ -10,7 +10,10 @@
         >
     <testsuites>
         <testsuite name="ClassLoader">
-            <directory>ClassLoader/test</directory>
+            <directory>src/glady/Behind/ClassLoader/test</directory>
+        </testsuite>
+        <testsuite name="Diff">
+            <directory>src/glady/Behind/Diff/test</directory>
         </testsuite>
     </testsuites>
 </phpunit>

@@ -20,6 +20,9 @@ use glady\Behind\TestFramework\UnitTest\TestCase;
  */
 class ClassLoaderEventTest extends TestCase
 {
+    protected $className = ClassLoader::CLASSNAME;
+
+    
     /**
      * @param ClassLoader $classLoader
      * @param string      $event
