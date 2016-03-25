@@ -11,18 +11,15 @@
 namespace glady\Behind\ClassLoader\test;
 
 use glady\Behind\ClassLoader\ClassLoader;
+use glady\Behind\TestFramework\UnitTest\BaseClassTestCase;
 use glady\Behind\TestFramework\UnitTest\Helper\Reflection;
-use glady\Behind\TestFramework\UnitTest\TestCase;
 
 /**
  * Class ClassLoaderEventTest
  * @package glady\Behind\ClassLoader\test
  */
-class ClassLoaderEventTest extends TestCase
+class ClassLoaderEventTest extends BaseClassTestCase
 {
-    protected $className = ClassLoader::CLASSNAME;
-
-    
     /**
      * @param ClassLoader $classLoader
      * @param string      $event
