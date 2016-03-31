@@ -150,7 +150,7 @@ class ClassLoader
         $type = $this->getFromArray($rule, 'type');
         switch ($type) {
             case 'callback':
-                $fileName = call_user_func_array($rule['fn'], array($className));
+                $fileName = call_user_func($rule['fn'], $className);
                 break;
 
             case 'map':
@@ -393,7 +393,7 @@ class ClassLoader
     {
         // execute callback
         $eventCallable = $this->events[$eventName][$eventIndex]['callable'];
-        $return = call_user_func_array($eventCallable, array($this, $eventName, $eventData));
+        $return = call_user_func($eventCallable, $this, $eventName, $eventData);
         // decrease remaining runs
         $this->events[$eventName][$eventIndex]['count']--;
         if ($this->events[$eventName][$eventIndex]['count'] === 0) {

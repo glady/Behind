@@ -47,7 +47,7 @@ class Iterator
         foreach ($this->getIterator() as $fileInfo) {
             if ($fileInfo->isFile() && $this->fileNameMatches($fileInfo, $fileNamePattern)) {
                 $file = new File($fileInfo->openFile());
-                call_user_func_array($callable, array($file));
+                call_user_func($callable, $file);
                 $file = null;
                 $fileInfo = null;
             }
@@ -63,7 +63,7 @@ class Iterator
         foreach ($this->getIterator() as $fileInfo) {
             if ($fileInfo->isDir()) {
                 $dir = new Directory($fileInfo);
-                call_user_func_array($callable, array($dir));
+                call_user_func($callable, $dir);
                 $dir = null;
                 $fileInfo = null;
             }
