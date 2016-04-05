@@ -19,25 +19,24 @@ use ReflectionMethod;
  */
 class Reflection
 {
-
     /**
-     * @param $className
+     * @param string|object $class
      * @return ReflectionClass
      */
-    public function getClass($className)
+    public function getClass($class)
     {
-        return new ReflectionClass($className);
+        return new ReflectionClass($class);
     }
 
 
     /**
-     * @param $className
-     * @param $methodName
+     * @param string|object $class
+     * @param string        $methodName
      * @return ReflectionMethod
      */
-    public function getMethod($className, $methodName)
+    public function getMethod($class, $methodName)
     {
-        $method = $this->getClass($className)->getMethod($methodName);
+        $method = $this->getClass($class)->getMethod($methodName);
         $method->setAccessible(true);
         return $method;
     }
