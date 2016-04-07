@@ -18,7 +18,7 @@ use glady\Behind\ClassLoader\ClassLoader;
  */
 class Behind
 {
-    const VERSION = '0.1.1';
+    const VERSION = 'dev';
 
     /** @var ClassLoader */
     private static $classLoader = null;
