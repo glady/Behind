@@ -19,7 +19,8 @@ Milestones
 1. [DONE] *ClassLoader*-Instance which can be registered as php-autoloader
 2. [DONE] *PackageHandler* as extension for ClassLoader
 3. [DONE] *ClassMapGenerator* for automatic generation of class maps thats can be used by ClassLoader
-4. [IN WORK] class loading of installed composer dependencies (classmap, psr-0, psr-4)
+4. [IN WORK] class loading of installed composer dependencies (classmap, psr-0, psr-4, function-includes)
+   - [#3] prototype for function-loader
 5. *TestFramework* for simple test cases needed to test contained tools
 6. *ErrorHandler* and a class for *Debug*-Information
 6. *Logger* classes for different targets
