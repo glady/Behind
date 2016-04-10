@@ -17,16 +17,17 @@ env:
 - COVER=0
 
 matrix:
-  # skip all cover-build except for "php: 5.6"
+  # skip all cover-build except for "php: 7"
  exclude:
   - env: COVER=1
  include:
-  - php: 5.6
+  - php: 7
     env: COVER=1
  allow_failures:
   # run this coverage build, but allow failure
   - php: 5.6
     env: COVER=1
+  - php: nightly # nightly build can have bugs, that are no failures for Behind
   - php: hhvm-nightly # currently not supported by travis (no nightly bilds on precise)
 
 # validated with: http://lint.travis-ci.org/
