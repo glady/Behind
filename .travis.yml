@@ -25,7 +25,7 @@ matrix:
     env: COVER=1
  allow_failures:
   # run this coverage build, but allow failure
-  - php: 5.6
+  - php: 7
     env: COVER=1
   - php: nightly # nightly build can have bugs, that are no failures for Behind
   - php: hhvm-nightly # currently not supported by travis (no nightly bilds on precise)
