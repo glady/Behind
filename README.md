@@ -9,8 +9,9 @@ master:
 [![Build Status](https://travis-ci.org/glady/Behind.png?branch=master)](https://travis-ci.org/glady/Behind)
 [![Code Climate](https://codeclimate.com/github/glady/Behind/badges/gpa.svg)](https://codeclimate.com/github/glady/Behind)
 [![Test Coverage](https://codeclimate.com/github/glady/Behind/badges/coverage.svg)](https://codeclimate.com/github/glady/Behind)
+
 v0.1.x:
-[![Build Status](https://travis-ci.org/glady/Behind.png?branch=v0.1.x)](https://travis-ci.org/glady/Behind/tree/v0.1.x)
+[![Build Status](https://travis-ci.org/glady/Behind.png?branch=v0.1.x)](https://travis-ci.org/glady/Behind/branches)
 
 Milestones
 ----------
