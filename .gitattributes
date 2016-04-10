@@ -1,0 +1,14 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# used to remove files from deployment using `git archive`
+
+# git files
+.gitattributes      export-ignore
+.gitignore          export-ignore
+
+# test files
+.travis.yml         export-ignore
+test-bootstrap.php  export-ignore
+phpunit.xml.dist    export-ignore
+**/test             export-ignore
