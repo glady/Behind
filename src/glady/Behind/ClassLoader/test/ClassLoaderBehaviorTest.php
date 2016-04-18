@@ -234,4 +234,20 @@ class ClassLoaderBehaviorTest extends ClassLoaderBehavior
         $this->thenClassShouldBeDeclared('TestFolder_TestClass');
         $this->thenClassShouldBeDeclared('TestFolder_TestClassInvalid');
     }
+
+
+    public function testIssue5()
+    {
+        $this->givenIHaveAClassLoader();
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/OldVersion/Framework/Package/Feature.php', array('Framework_Package_Feature'));
+        $this->givenIHaveAPhpFile_ThatContainsClasses('/NewVersion/Framework/Package/Feature.php', array('Framework\\Package\\Feature'));
+
+        $this->givenIHaveASeparatorRuleWith_AndFixedNamespace_OnDirectory_AsSeparatorOnDirectory('_', 'Framework', '/OldVersion/Framework', null);
+        $this->givenIHaveASeparatorRuleWith_AndFixedNamespace_OnDirectory_AsSeparatorOnDirectory('\\', 'Framework', '/NewVersion/Framework', null);
+
+        $this->whenITryToLoadExistingClass('Framework_Package_Feature');
+        $this->whenITryToLoadExistingClass('Framework\\Package\\Feature');
+
+        $this->thenNoFileIsIncludedTwice();
+    }
 }
