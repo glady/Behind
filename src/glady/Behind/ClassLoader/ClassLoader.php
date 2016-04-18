@@ -283,7 +283,7 @@ class ClassLoader
 
         $state[self::LOAD_STATE_FILE_NAME] = $fileName;
 
-        if ($fileName !== null && $this->fileExists($fileName)) {
+        if ($fileName !== null && !$this->isFileAlreadyIncluded($fileName) && $this->fileExists($fileName)) {
             $this->fire(self::ON_BEFORE_REQUIRE, $state);
 
             if (!$this->classExists($className) && !$this->isFileAlreadyIncluded($fileName)) {

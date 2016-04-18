@@ -245,6 +245,23 @@ abstract class ClassLoaderBehavior extends TestCase
     {
         $this->assertTrue(in_array($className, $this->classLoader->loadedClasses));
     }
+
+
+    protected function thenNoFileIsIncludedTwice()
+    {
+        $files = array();
+        foreach ($this->classLoader->_eventsFired[ClassLoader::ON_BEFORE_REQUIRE] as $event) {
+            $file = $event[ClassLoader::LOAD_STATE_FILE_NAME];
+
+            $files[$file] = isset($files[$file]) ? $files[$file] + 1 : 1;
+        }
+
+        $files = array_filter($files, function ($count) {
+            return $count > 1;
+        });
+
+        $this->assertEquals(array(), $files);
+    }
 }
 
 
