@@ -300,7 +300,7 @@ class MockClassLoader extends ClassLoader
     }
 
 
-    protected function includeFile($fileName)
+    protected function includeFile($fileName, $once = false)
     {
         if (isset($this->testIncludedFiles[$fileName])) {
             throw new \Exception('error. file included twice. can produce fatal errors.');
