@@ -42,9 +42,6 @@ matrix:
 sudo: false
 
 install:
- # from travis documentation: https://docs.travis-ci.com/user/languages/php#PHP-installation
- # "Note that the OpenSSL extension is disabled on php 5.3.3 because of compilation problems with OpenSSL 1.0."
- - if [[ "$TRAVIS_PHP_VERSION" == "5.3.3" ]]; then composer config -g disable-tls true; fi
  - travis_retry composer install --no-interaction --prefer-source
 
 before_script:
