@@ -30,6 +30,10 @@ matrix:
   - php: nightly # nightly build can have bugs, that are no failures for Behind
   - php: hhvm-nightly # currently not supported by travis (no nightly bilds on precise)
 
+  # from travis documentation: https://docs.travis-ci.com/user/languages/php#PHP-installation
+  # "Note that the OpenSSL extension is disabled on php 5.3.3 because of compilation problems with OpenSSL 1.0."
+  - php: 5.3.3
+
 # validated with: http://lint.travis-ci.org/
 # os:          # error: your repository must be feature flagged for the os setting to be used
 # - linux

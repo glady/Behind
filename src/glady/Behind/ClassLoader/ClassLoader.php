@@ -52,6 +52,9 @@ class ClassLoader
 
     /** @var string[] */
     private $includedFiles = array();
+
+    /** @var bool */
+    private $compatibilityMode = false;
     //</editor-fold>
 
 
@@ -105,11 +108,15 @@ class ClassLoader
 
 
     /**
-     * @param $fileName
+     * @param string $fileName
+     * @param bool   $once
      * @return mixed
      */
-    protected function includeFile($fileName)
+    protected function includeFile($fileName, $once = false)
     {
+        if ($once === true && $this->isCompatibilityMode()) {
+            return include_once $fileName;
+        }
         return include $fileName;
     }
 
@@ -287,7 +294,7 @@ class ClassLoader
             $this->fire(self::ON_BEFORE_REQUIRE, $state);
 
             if (!$this->classExists($className) && !$this->isFileAlreadyIncluded($fileName)) {
-                $this->includeFile($fileName);
+                $this->includeFile($fileName, true);
                 $this->setFileIncluded($fileName);
             }
 
@@ -673,6 +680,23 @@ class ClassLoader
             }
         }
         $rules[$ruleIndex][$namespace] = $realClassPath;
+    }
+
+
+    public function isCompatibilityMode()
+    {
+        return $this->compatibilityMode;
+    }
+
+
+    /**
+     * @param bool $compatibilityMode
+     * @return $this
+     */
+    public function setCompatibilityMode($compatibilityMode = true)
+    {
+        $this->compatibilityMode = $compatibilityMode === true;
+        return $this;
     }
 
 }
