@@ -231,11 +231,11 @@ class ClassAndPackageLoader extends ClassLoader
      */
     public function normalizeNamespaceForPackage(array $phpCodeLines, $className, $fileName)
     {
-        $namespace = 'namespace';
-        $namespaceLength = strlen($namespace);
         $hasNamespace = false;
         $closeNamespace = false;
         $lastUseIndex = null;
+        $firstClassIndex = null;
+
         foreach ($phpCodeLines as $i => $line) {
             $trimmedLine = trim($line);
             // remove opening and closing tag lines
@@ -244,7 +244,7 @@ class ClassAndPackageLoader extends ClassLoader
                 continue;
             }
             // rebuild namespace with ; to namespace with {}
-            if (substr($trimmedLine, 0, $namespaceLength) === $namespace) {
+            if (strpos($trimmedLine, 'namespace ') === 0) {
                 $hasNamespace = true;
                 // if not the "namespace xyz;" notation is used, the file itself does the right formatting!
                 // when used: rebuild with {}
@@ -256,8 +256,18 @@ class ClassAndPackageLoader extends ClassLoader
                 $lastUseIndex = $i;
             }
 
-            if (substr($trimmedLine, 0, 4) === 'use ') {
-                $lastUseIndex = $i;
+            if ($firstClassIndex === null) {
+                if (strpos($trimmedLine, 'class ') === 0
+                    || strpos($trimmedLine, 'abstract class ') === 0
+                    || strpos($trimmedLine, 'interface ') === 0
+                    || strpos($trimmedLine, 'trait ') === 0
+                ) {
+                    $firstClassIndex = $i;
+                }
+
+                if (strpos($trimmedLine, 'use ') === 0) {
+                    $lastUseIndex = $i;
+                }
             }
         }
 
@@ -274,7 +284,7 @@ class ClassAndPackageLoader extends ClassLoader
     private function isClassNameIgnoredForPackage($className)
     {
         foreach ($this->ignores as $ignore) {
-            if (substr($className, 0, strlen($ignore)) === $ignore) {
+            if (substr($className, $ignore) === 0) {
                 return true;
             }
         }
@@ -283,7 +293,7 @@ class ClassAndPackageLoader extends ClassLoader
 
 
     /**
-     * @param array $ignore
+     * @param string|array $ignore
      */
     public function ignorePackageHandlingForClassesStartingWith($ignore = array())
     {
