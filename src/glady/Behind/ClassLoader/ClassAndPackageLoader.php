@@ -274,7 +274,7 @@ class ClassAndPackageLoader extends ClassLoader
     private function isClassNameIgnoredForPackage($className)
     {
         foreach ($this->ignores as $ignore) {
-            if (substr($className, 0, strlen($ignore)) === $ignore) {
+            if (strpos($className, $ignore) === 0) {
                 return true;
             }
         }
