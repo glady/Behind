@@ -119,6 +119,12 @@ class ClassLoader
     }
 
 
+    public function resetNotFoundClasses()
+    {
+        $this->notFoundClasses = array();
+    }
+
+
     /**
      * @param $fileName
      * @return bool
@@ -532,6 +538,7 @@ class ClassLoader
      */
     protected function setConfig($configName, $value)
     {
+        $this->resetNotFoundClasses();
         $this->config[$configName] = $value;
     }
     //</editor-fold>
