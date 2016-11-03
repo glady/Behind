@@ -53,6 +53,9 @@ class ClassLoader
     /** @var string[] */
     private $includedFiles = array();
 
+    /** @var bool[] */
+    private $notFoundClasses = array();
+
     /** @var bool */
     private $compatibilityMode = false;
     //</editor-fold>
@@ -98,6 +101,25 @@ class ClassLoader
 
 
     /**
+     * @param string $className
+     * @return bool
+     */
+    public function isClassNotFound($className)
+    {
+        return isset($this->notFoundClasses[$className]);
+    }
+
+
+    /**
+     * @param string $className
+     */
+    public function setClassNotFound($className)
+    {
+        $this->notFoundClasses[$className] = true;
+    }
+
+
+    /**
      * @param $fileName
      * @return bool
      */
@@ -136,12 +158,18 @@ class ClassLoader
         $this->fire(self::ON_BEFORE_LOAD, $state);
         if (!$this->classExists($className)) {
             $autoloadRules = $this->getConfig(self::CONFIG_LOAD_RULE_ORDERED, array());
-            while (!$state[self::LOAD_STATE_LOADED] && ($rule = array_shift($autoloadRules))) {
+            while (!$state[self::LOAD_STATE_LOADED]
+                && !$this->isClassNotFound($className)
+                && ($rule = array_shift($autoloadRules))
+            ) {
                 $state = $this->tryToLoadClassByRule($state, $className, $rule);
             }
         }
         $this->fire(self::ON_AFTER_LOAD, $state);
 
+        if (!$state[self::LOAD_STATE_LOADED]) {
+            $this->setClassNotFound($className);
+        }
         return $state[self::LOAD_STATE_LOADED];
     }
 
