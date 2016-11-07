@@ -63,16 +63,18 @@ class ClassLoader
 
     //<editor-fold desc="Registering as autoloader">
     /**
-     * @param object $autoLoader - instance of any classLoader class with loading classes within $fn
-     * @param string $fn
-     * @return object|ClassLoader
+     * @param ClassLoader|object $autoLoader - instance of any classLoader class with loading classes within $fn
+     * @param string             $fn
+     * @param bool               $prepend
+     * @return ClassLoader|object
      */
-    public static function registerAutoLoader($autoLoader = null, $fn = self::LOAD_FUNCTION)
+    public static function registerAutoLoader($autoLoader = null, $fn = self::LOAD_FUNCTION, $prepend = false)
     {
         if ($autoLoader === null) {
             $autoLoader = new self();
         }
-        spl_autoload_register(array($autoLoader, $fn));
+        $throw = true;
+        spl_autoload_register(array($autoLoader, $fn), $throw, $prepend);
         return $autoLoader;
     }
 
@@ -83,6 +85,15 @@ class ClassLoader
     public function register()
     {
         self::registerAutoLoader($this);
+    }
+
+
+    /**
+     * registers this instance as first php auto-loader
+     */
+    public function registerPrepended()
+    {
+        self::registerAutoLoader($this, self::LOAD_FUNCTION, true);
     }
     //</editor-fold>
 
