@@ -52,7 +52,7 @@ class Request
     public function getRequestParam($name)
     {
         return $this->postParams[$name]
-            ?? $this->getParams[$name]
-            ?? null;
+            ? $this->getParams[$name]
+            : null;
     }
 }
