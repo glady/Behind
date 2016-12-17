@@ -4,6 +4,7 @@ php:
 - hhvm-nightly
 - hhvm
 - nightly
+- 7.1
 - 7
 - 5.6
 - 5.5
@@ -41,14 +42,12 @@ matrix:
 
 sudo: false
 
+addons:
+    code_climate:
+        repo_token: 99a93b7c64a586c9207ad11a8da9a7dbc2811936dc13c11bbe71653e0fcd9f53
+        
 install:
  - travis_retry composer install --no-interaction --prefer-source
 
-before_script:
- - if [[ "$COVER" == 1 ]]; then ./tools/prepare_coverage.sh; fi
-
 script:
  - if [[ "$COVER" == 1 ]]; then phpunit --coverage-clover build/logs/clover.xml; else phpunit; fi
-
-after_script:
- - if [[ "$COVER" == 1 ]]; then ./tools/report_coverage.sh; fi
