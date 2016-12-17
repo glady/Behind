@@ -1,7 +1,7 @@
 Behind
 ======
 
-Behind is a php toolbox for environments of your php-application.
+Behind is a php toolbox with helper classes of your php-application.
 
 UnitTests and Code Analysis
 ---------------------------
@@ -25,13 +25,3 @@ Milestones
 6. *TestFramework* for simple test cases needed to test contained tools
 7. *ErrorHandler* and a class for *Debug*-Information
 8. *Logger* classes for different targets
-
-Basic Usage
------------
-
-The target is to create *independent* classes, not a FrameWork. You can use one single file (e.g. ClassLoader) for single require within your code. Only extensions should require their base class(es).
-
-Two usages are possible:
-
-1. use single files (possibly with their base classes)
-2. use composer package for full toolbox

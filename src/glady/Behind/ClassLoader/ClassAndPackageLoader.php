@@ -86,7 +86,7 @@ class ClassAndPackageLoader extends ClassLoader
      */
     public function startPackage($id)
     {
-        if ($this->hasStoredPackage($id) && $this->isLoadPackageEnabled) {
+        if ($this->isLoadPackageEnabled && $this->hasStoredPackage($id)) {
             $this->includeStoredPackage($id);
         }
         else if ($this->isSavePackageEnabled) {
@@ -95,13 +95,18 @@ class ClassAndPackageLoader extends ClassLoader
                 'classMap' => array()
             );
 
-            $this->on(self::ON_AFTER_LOAD, function (ClassAndPackageLoader $me, $eventName, $eventData) use ($id) {
-                if ($eventData[ClassLoader::LOAD_STATE_LOADED] === true) {
-                    $className = $eventData[ClassLoader::LOAD_STATE_CLASS_NAME];
-                    $fileName = $eventData[ClassLoader::LOAD_STATE_FILE_NAME];
-                    $me->addClassToPackage($id, $className, $fileName);
-                }
-            }, array(), "package-$id");
+            $this->on(
+                self::ON_AFTER_LOAD,
+                function (ClassAndPackageLoader $me, $eventName, $eventData) use ($id) {
+                    if ($me::ON_AFTER_LOAD === $eventName && $eventData[ClassLoader::LOAD_STATE_LOADED] === true) {
+                        $className = $eventData[ClassLoader::LOAD_STATE_CLASS_NAME];
+                        $fileName = $eventData[ClassLoader::LOAD_STATE_FILE_NAME];
+                        $me->addClassToPackage($id, $className, $fileName);
+                    }
+                },
+                array(),
+                "package-$id"
+            );
         }
     }
 
@@ -227,7 +232,7 @@ class ClassAndPackageLoader extends ClassLoader
      * @param array  $phpCodeLines
      * @param string $className
      * @param string $fileName
-     * @return array
+     * @return string
      */
     public function normalizeNamespaceForPackage(array $phpCodeLines, $className, $fileName)
     {
@@ -278,7 +283,7 @@ class ClassAndPackageLoader extends ClassLoader
 
 
     /**
-     * @param $className
+     * @param string $className
      * @return bool
      */
     private function isClassNameIgnoredForPackage($className)
@@ -337,10 +342,10 @@ class ClassAndPackageLoader extends ClassLoader
 
 
     /**
-     * @param       $className
-     * @param       $package
-     * @param array $phpCodeLines
-     * @param       $lastUseIndex
+     * @param string   $className
+     * @param string   $package
+     * @param array    $phpCodeLines
+     * @param int|null $lastUseIndex
      */
     private function addClassCheck($className, &$package, array &$phpCodeLines, $lastUseIndex)
     {
@@ -356,9 +361,9 @@ class ClassAndPackageLoader extends ClassLoader
 
 
     /**
-     * @param $packageFilename
-     * @param $meta
-     * @param $package
+     * @param string $packageFilename
+     * @param string $meta
+     * @param string $package
      */
     protected function writeToFile($packageFilename, $meta, $package)
     {

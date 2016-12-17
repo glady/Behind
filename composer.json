@@ -8,9 +8,12 @@
     }
   ],
   "minimum-stability": "dev",
-  "require": {},
+  "require": {
+    "php": ">=5.3.9",
+    "ext-spl": "*"
+  },
   "require-dev": {
-    "codeclimate/php-test-reporter": "dev-master"
+    "ext-reflection": "*"
   },
   "autoload": {
     "psr-0": {
