@@ -52,5 +52,5 @@ install:
 script:
  - if [[ "$COVER" == 1 ]]; then phpunit --coverage-clover build/logs/clover.xml; else phpunit; fi
 
-after script:
+after_script:
  - if [[ "$COVER" == 1 ]]; then CODECLIMATE_REPO_TOKEN=99a93b7c64a586c9207ad11a8da9a7dbc2811936dc13c11bbe71653e0fcd9f53 ./vendor/bin/test-reporter; fi
