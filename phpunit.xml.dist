@@ -21,7 +21,8 @@
         <whitelist processUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">src</directory>
             <exclude>
-                <directory suffix=".php">src/**/test</directory>
+                <directory suffix=".php">src/glady/Behind/ClassLoader/test</directory>
+                <directory suffix=".php">src/glady/Behind/Diff/test</directory>
             </exclude>
         </whitelist>
     </filter>
