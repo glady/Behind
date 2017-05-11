@@ -80,7 +80,7 @@ class ClassMapGenerator
                             else {
                                 $mapPath = $realPath;
                             }
-                            if ($this->isThrowErrorIfClassFoundTwice() && isset($map[$class])) {
+                            if ($me->isThrowErrorIfClassFoundTwice() && isset($map[$class])) {
                                 $path1 = $map[$class];
                                 $path2 = $mapPath;
                                 throw new RuntimeException("Class '$class' found twice: '$path1' and '$path2'");
