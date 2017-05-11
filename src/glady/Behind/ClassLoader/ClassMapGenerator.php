@@ -12,6 +12,7 @@ namespace glady\Behind\ClassLoader;
 
 use glady\Behind\Utils\File\File;
 use glady\Behind\Utils\File\Iterator;
+use RuntimeException;
 
 /**
  * Class ClassMapGenerator
@@ -28,6 +29,9 @@ class ClassMapGenerator
     /** @var bool */
     private $acceptMultipleClassesPerFile = false;
 
+    /** @var bool */
+    private $throwErrorIfClassFoundTwice = false;
+
     /** @var string|null */
     private $fileNamePattern = null;
 
@@ -35,6 +39,7 @@ class ClassMapGenerator
     /**
      * @param string $fileNamePattern
      * @return array
+     * @throws RuntimeException
      */
     public function generate($fileNamePattern = null)
     {
@@ -74,6 +79,11 @@ class ClassMapGenerator
                             }
                             else {
                                 $mapPath = $realPath;
+                            }
+                            if ($this->isThrowErrorIfClassFoundTwice() && isset($map[$class])) {
+                                $path1 = $map[$class];
+                                $path2 = $mapPath;
+                                throw new RuntimeException("Class '$class' found twice: '$path1' and '$path2'");
                             }
                             $map[$class] = $mapPath;
                             if (!$me->acceptsMultipleClassesPerFile()) {
@@ -166,5 +176,21 @@ class ClassMapGenerator
     public function acceptMultipleClassesPerFile($acceptMultipleClassesPerFile = true)
     {
         $this->acceptMultipleClassesPerFile = $acceptMultipleClassesPerFile === true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isThrowErrorIfClassFoundTwice()
+    {
+        return $this->throwErrorIfClassFoundTwice;
+    }
+
+    /**
+     * @param bool $throwErrorIfClassFoundTwice
+     */
+    public function setThrowErrorIfClassFoundTwice($throwErrorIfClassFoundTwice = true)
+    {
+        $this->throwErrorIfClassFoundTwice = $throwErrorIfClassFoundTwice === true;
     }
 }
