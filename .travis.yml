@@ -1,8 +1,6 @@
 language: php
 
 php:
-- hhvm-nightly
-- hhvm
 - nightly
 - '7.3'
 - '7.2'
@@ -14,13 +12,9 @@ php:
 - '5.4'
 
 env:
-- COVER=1
 - COVER=0
 
 matrix:
-  # skip all cover-build except for "php: 7"
- exclude:
-  - env: COVER=1
  include:
   - name: 'Coverage'
     php: '7'
@@ -40,8 +34,6 @@ matrix:
   # run this coverage build, but allow failure
   - name: 'Coverage'
   - php: nightly # nightly build can have bugs, that are no failures for Behind
-  - php: hhvm
-  - php: hhvm-nightly # currently not supported by travis (no nightly builds on precise)
 
   # from travis documentation: https://docs.travis-ci.com/user/languages/php#PHP-installation
   # "Note that the OpenSSL extension is disabled on php 5.3.3 because of compilation problems with OpenSSL 1.0."
